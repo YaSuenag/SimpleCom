@@ -14,10 +14,6 @@ Console app for serial connection.
 
 You need to add a profile for SimpleCom. The example is available [here](WindowsTerminal-setting-example/profile.json).
 
-# Known issue
-
-* Tab order in setup dialog is not ordered.
-
 # License
 
 GNU General Public License v2.0
