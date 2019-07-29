@@ -16,7 +16,6 @@ You need to add a profile for SimpleCom. The example is available [here](Windows
 
 # Known issue
 
-* On Windows Terminal, F1 key does not affect. You need to close tab for SimpleCom to terminate it.
 * Tab order in setup dialog is not ordered.
 
 # License

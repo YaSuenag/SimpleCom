@@ -57,7 +57,7 @@ static bool process_arrow(char* data) {
 
 }
 
-static void StdInRedirector() {
+static void StdInRedirector(HWND parent_hwnd) {
 	OVERLAPPED overlapped = { 0 };
 	char data[4];
 	int data_len;
@@ -65,7 +65,7 @@ static void StdInRedirector() {
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (overlapped.hEvent == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(GetConsoleWindow(), ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return;
 	}
 
@@ -78,7 +78,7 @@ static void StdInRedirector() {
 			data_len = 3;
 		}
 		else if ((ch == 0x0) && (_getch() == 0x3b)) { // F1 key
-			if (MessageBox(GetConsoleWindow(), _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES){
+			if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES){
 				break;
 			}
 			else {
@@ -130,32 +130,54 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	return 0;
 }
 
+static HWND GetParentWindow() {
+	HWND current = GetConsoleWindow();
+
+	while (true) {
+		HWND parent = GetParent(current);
+
+		if (parent == NULL) {
+			TCHAR window_text[MAX_PATH] = { 0 };
+			GetWindowText(current, window_text, MAX_PATH);
+
+			// If window_text is empty, SimpleCom might be run on Windows Terminal (Could not get valid owner window text)
+			return (window_text[0] == 0) ? NULL : current;
+		}
+		else {
+			current = parent;
+		}
+
+	}
+
+}
+
 int main()
 {
 	DCB dcb;
 	TString device;
+	HWND parent_hwnd = GetParentWindow();
 
 	try {
 		SerialSetup setup;
-		if (!setup.ShowConfigureDialog(NULL, GetConsoleWindow())) {
+		if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
 			return -1;
 		}
 		device = _T("\\\\.\\") + setup.GetPort();
 		setup.SaveToDCB(&dcb);
 	}
 	catch (WinAPIException e) {
-		MessageBox(GetConsoleWindow(), e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -1;
 	}
 	catch (SerialSetupException e) {
-		MessageBox(GetConsoleWindow(), e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -2;
 	}
 
 	hSerial = CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (hSerial == INVALID_HANDLE_VALUE) {
 		WinAPIException e(GetLastError(), NULL);
-		MessageBox(GetConsoleWindow(), e.GetErrorText(), _T("Open serial connection"), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, e.GetErrorText(), _T("Open serial connection"), MB_OK | MB_ICONERROR);
 		return -4;
 	}
 	SetCommState(hSerial, &dcb);
@@ -166,7 +188,7 @@ int main()
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(GetConsoleWindow(), ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		CloseHandle(hSerial);
 		return -1;
 	}
@@ -178,12 +200,12 @@ int main()
 	stdoutRedirectorThread = CreateThread(NULL, 0, &StdOutRedirector, NULL, 0, NULL);
 	if (stdoutRedirectorThread == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(GetConsoleWindow(), ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		CloseHandle(hSerial);
 		return -2;
 	}
 
-	StdInRedirector();
+	StdInRedirector(parent_hwnd);
 	CancelIoEx(hSerial, &serialReadOverlapped);
 	WaitForSingleObject(stdoutRedirectorThread, INFINITE);
 
