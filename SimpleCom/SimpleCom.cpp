@@ -180,6 +180,10 @@ int main()
 		MessageBox(parent_hwnd, e.GetErrorText(), _T("Open serial connection"), MB_OK | MB_ICONERROR);
 		return -4;
 	}
+
+	TString title = _T("SimpleCom: ") + device;
+	SetConsoleTitle(title.c_str());
+
 	SetCommState(hSerial, &dcb);
 	PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	SetCommMask(hSerial, EV_RXCHAR);
