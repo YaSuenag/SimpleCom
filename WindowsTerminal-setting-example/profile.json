@@ -1,5 +1,4 @@
 {
-  "acrylicOpacity": 0.75,
   "closeOnExit": true,
   "colorScheme": "Campbell",
   "commandline": "C:\\PathT\\To\\SimpleCom.exe",
@@ -10,9 +9,7 @@
   "guid": "{a3177c2a-f5f4-4c95-b877-0d12d6413363}",
   "historySize": 9001,
   "name": "SimpleCom",
-  "tabTitle": "SimpleCom",
   "padding": "0, 0, 0, 0",
   "snapOnInput": true,
-  "startingDirectory": "%USERPROFILE%",
-  "useAcrylic": true
+  "useAcrylic": false
 }
