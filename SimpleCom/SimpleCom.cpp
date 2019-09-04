@@ -1,4 +1,6 @@
-﻿#include <Windows.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+
+#include <Windows.h>
 #include <conio.h>
 
 #include <iostream>
@@ -28,6 +30,11 @@ static void SetVTConsole(HANDLE hConsole) {
 	if (result) {
 		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 	}
+
+	if (getenv("TERM") == NULL) {
+		_putenv("TERM=vt100");
+	}
+
 }
 
 static bool process_arrow(char* data) {
