@@ -14,6 +14,10 @@ Console app for serial connection.
 
 You need to add a profile for SimpleCom. The example is available [here](WindowsTerminal-setting-example/profile.json).
 
+# Notes
+
+SimpleCom sends arrow keys as VT100 escape sequences. So the serial device to connect via SimpleCom need to support VT100 or compatible shell if you want to use arrow keys.
+
 # License
 
 GNU General Public License v2.0
