@@ -37,11 +37,11 @@ static void SetVTConsole(HANDLE hConsole) {
 
 }
 
-static bool process_arrow(char* data) {
+static bool process_arrow(char* data, int fnch) {
 	data[0] = ESC;
 	data[1] = '[';
 
-	switch (_getch()) {
+	switch (fnch) {
 	case ARROW_UP:
 		data[2] = 'A';
 		return true;
@@ -78,19 +78,20 @@ static void StdInRedirector(HWND parent_hwnd) {
 
 	while (true) {
 		int ch = _getch();
-		if (ch == 0xe0) {
-			if (!process_arrow(data)) {
+		if ((ch == 0xe0) || (ch == 0x0)) {
+			int fnch = _getch();
+			if ((ch == 0x0) && (fnch == 0x3b)) {// F1 key
+				if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+					break;
+				}
+				else {
+					continue;
+				}
+			}
+			else if (!process_arrow(data, fnch)) {
 				continue;
 			}
 			data_len = 3;
-		}
-		else if ((ch == 0x0) && (_getch() == 0x3b)) { // F1 key
-			if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES){
-				break;
-			}
-			else {
-				continue;
-			}
 		}
 		else {
 			data[0] = ch;
