@@ -10,6 +10,11 @@ Console app for serial connection.
 4. Operate target device via the console
 5. Press F1 to leave its serial session and to finish SimpleCom
 
+# How to build
+
+Use [SimpleCom.sln](https://github.com/YaSuenag/SimpleCom/blob/master/SimpleCom.sln) on your Visual Studio.  
+I confirmed x64 build on VS 2019.
+
 # How to use on [Windows Terminal](https://github.com/microsoft/terminal)
 
 You need to add a profile for SimpleCom. The example is available [here](WindowsTerminal-setting-example/profile.json).
