@@ -37,6 +37,9 @@ static void SetVTConsole(HANDLE hConsole) {
 
 }
 
+/*
+ * Handle allow key for VT escape sequence.
+ */
 static bool process_arrow(char* data, int fnch) {
 	data[0] = ESC;
 	data[1] = '[';
@@ -64,6 +67,10 @@ static bool process_arrow(char* data, int fnch) {
 
 }
 
+/*
+ * Entry point for stdin redirector.
+ * stdin redirects stdin to serial (write op).
+ */
 static void StdInRedirector(HWND parent_hwnd) {
 	OVERLAPPED overlapped = { 0 };
 	char data[4];
@@ -80,7 +87,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 		int ch = _getch();
 		if ((ch == 0xe0) || (ch == 0x0)) {
 			int fnch = _getch();
-			if ((ch == 0x0) && (fnch == 0x3b)) {// F1 key
+			if ((ch == 0x0) && (fnch == 0x3b)) { // F1 key - it means "finish serial communication" in SimpleCom
 				if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 					break;
 				}
@@ -88,7 +95,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 					continue;
 				}
 			}
-			else if (!process_arrow(data, fnch)) {
+			else if (!process_arrow(data, fnch)) { // allow keys are special in VT. We need to pass VT escape sequence for them.
 				continue;
 			}
 			data_len = 3;
@@ -113,6 +120,10 @@ static void StdInRedirector(HWND parent_hwnd) {
 	CloseHandle(overlapped.hEvent);
 }
 
+/*
+ * Entry point for stdout redirector.
+ * stdout redirects serial (read op) to stdout.
+ */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	char buf;
@@ -165,6 +176,7 @@ int main()
 	TString device;
 	HWND parent_hwnd = GetParentWindow();
 
+	// Serial port configuration
 	try {
 		SerialSetup setup;
 		if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
@@ -182,9 +194,10 @@ int main()
 		return -2;
 	}
 
+	// Open serial device
 	hSerial = CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (hSerial == INVALID_HANDLE_VALUE) {
-		WinAPIException e(GetLastError(), NULL);
+		WinAPIException e(GetLastError(), NULL); // Use WinAPIException to get error string.
 		MessageBox(parent_hwnd, e.GetErrorText(), _T("Open serial connection"), MB_OK | MB_ICONERROR);
 		return -4;
 	}
@@ -209,6 +222,7 @@ int main()
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetVTConsole(hStdOut);
 
+	// Create stdout redirector
 	stdoutRedirectorThread = CreateThread(NULL, 0, &StdOutRedirector, NULL, 0, NULL);
 	if (stdoutRedirectorThread == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
@@ -217,7 +231,11 @@ int main()
 		return -2;
 	}
 
+	// stdin redirector would perform in current thread
 	StdInRedirector(parent_hwnd);
+
+	// stdin redirector should be finished at this point.
+	// It means end of serial communication. So we should terminate stdout redirector.
 	CancelIoEx(hSerial, &serialReadOverlapped);
 	WaitForSingleObject(stdoutRedirectorThread, INFINITE);
 

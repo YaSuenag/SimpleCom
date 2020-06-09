@@ -9,16 +9,19 @@
 #include "EnumValue.h"
 
 
+/* Enum for parity */
 class Parity : public EnumValue {
 public:
 	constexpr explicit Parity(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 };
 
+/* Enum for flow control */
 class FlowControl : public EnumValue {
 public:
 	constexpr explicit FlowControl(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 };
 
+/* Enum for stop bits */
 class StopBits : public EnumValue {
 public:
 	constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
@@ -28,6 +31,10 @@ public:
 typedef std::basic_string<TCHAR> TString;
 typedef std::map<TString, TString> TDeviceMap;
 
+/*
+ * This class shows setup dialog box for serial connection.
+ * The caller can retrieve serial configuration which the user sets on dialog box as `LPDCB`.
+ */
 class SerialSetup
 {
 private:
@@ -101,6 +108,10 @@ public:
 	void SaveToDCB(LPDCB dcb) noexcept;
 };
 
+/*
+ * Exception class for serial setup excepting Windows API error.
+ * This class wouldn't be manage memory, so caller has responsibility to manage it.
+ */
 class SerialSetupException {
 private:
 	LPCTSTR _error_caption;

@@ -2,6 +2,11 @@
 
 #include <Windows.h>
 
+/*
+ * Base class for enum value.
+ * This class holds int value (like enum type) and description in string.
+ * The instance would be compared in int value.
+ */
 class EnumValue
 {
 protected:

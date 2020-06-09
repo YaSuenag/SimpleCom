@@ -13,6 +13,7 @@
 #endif
 
 
+// Enum setup for parity
 static constexpr Parity NO_PARITY{ NOPARITY, _T("none") };
 static constexpr Parity ODD_PARITY{ ODDPARITY, _T("odd") };
 static constexpr Parity EVEN_PARITY{ EVENPARITY, _T("even") };
@@ -20,11 +21,13 @@ static constexpr Parity MARK_PARITY{ MARKPARITY, _T("mark") };
 static constexpr Parity SPACE_PARITY{ SPACEPARITY, _T("space") };
 static constexpr Parity parities[] = { NO_PARITY, ODD_PARITY, EVEN_PARITY, MARK_PARITY, SPACE_PARITY };
 
+// Enum setup for flow control
 static constexpr FlowControl NONE{ __COUNTER__, _T("none") };
 static constexpr FlowControl HARDWARE{ __COUNTER__, _T("hardware") };
 static constexpr FlowControl SOFTWARE{ __COUNTER__, _T("software") };
 static constexpr FlowControl flowctrls[] = { NONE, HARDWARE, SOFTWARE };
 
+// Enum setup for stop bits
 static constexpr StopBits ONE{ ONESTOPBIT, _T("1") };
 static constexpr StopBits ONE5{ ONE5STOPBITS, _T("1.5") };
 static constexpr StopBits TWO{ TWOSTOPBITS, _T("2") };
@@ -49,6 +52,9 @@ SerialSetup::~SerialSetup()
 }
 
 void SerialSetup::initialize() {
+	// Generates device map of serial interface name and device name
+	// from HKLM\HARDWARE\DEVICEMAP\SERIALCOMM.
+
 	HKEY hKey;
 	LSTATUS status;
 
@@ -90,6 +96,9 @@ void SerialSetup::initialize() {
 }
 
 static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
+	// Initialize serial configuration.
+	// Initial value is for serial console of Raspberry Pi.
+
 	TString text_str;
 
 	HWND hComboSerialDevice = GetDlgItem(hDlg, IDC_SERIAL_DEVICE);
@@ -125,9 +134,15 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
 	SendMessage(hComboFlowCtl, CB_SETCURSEL, 0, 0);
 }
 
+/*
+ * Retrieves serial configuration from dialog.
+ * Return true if all configuration are retrieved and they are valid.
+ */
 static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 	int selected_idx;;
 
+	// Iterating order of std::map is guaranteed.
+	// So we can get map entry from the index of combo box.
 	// https://stackoverflow.com/questions/7648756/is-the-order-of-iterating-through-stdmap-known-and-guaranteed-by-the-standard
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_SERIAL_DEVICE), CB_GETCURSEL, 0, 0));
 	auto target = setup->GetDevices().begin();
@@ -163,6 +178,9 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 	return true;
 }
 
+/*
+ * Configuration dialog box procedure
+ */
 static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
 	static SerialSetup* setup;
 	
@@ -192,10 +210,17 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 	return FALSE;
 }
 
+/*
+ * Show serial configuration dialog.
+ * Return true if the dialog is finished with "connect" button (IDCONNECT).
+ */
 bool SerialSetup::ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept {
 	return IDCONNECT == DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP), hWnd, &SettingDlgProc, reinterpret_cast<LPARAM>(this));
 }
 
+/*
+ * Save configuration to DCB
+ */
 void SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 	ZeroMemory(dcb, sizeof(DCB));
 	dcb->DCBlength = sizeof(DCB);
