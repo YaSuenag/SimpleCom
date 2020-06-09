@@ -17,7 +17,31 @@ I confirmed x64 build on VS 2019.
 
 # How to use on [Windows Terminal](https://github.com/microsoft/terminal)
 
-You need to add a profile for SimpleCom. The example is available [here](WindowsTerminal-setting-example/profile.json).
+You can integrate SimpleCom to Windows Terminal if you add following JSON values to `settings.json`.
+
+```
+{
+
+ ...
+
+  "profiles": [
+
+ ...
+
+    {
+      "closeOnExit" : true,
+      "commandline": "C:\\path\\to\\SimpleCom.exe",
+      "cursorColor": "#FFFFFF",
+      "cursorShape": "filledBox",
+      "guid": "{a3177c2a-f5f4-4c95-b877-0d12d6413363}",
+      "name": "SimpleCom"
+    }
+
+ ...
+
+```
+
+See [Windows Terminal official document](https://github.com/microsoft/terminal/blob/master/doc/user-docs/UsingJsonSettings.md) for more details.
 
 # Notes
 
