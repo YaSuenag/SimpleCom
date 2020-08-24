@@ -45,7 +45,8 @@ See [Windows Terminal official document](https://github.com/microsoft/terminal/b
 
 # Notes
 
-SimpleCom sends arrow keys as VT100 escape sequences. So the serial device to connect via SimpleCom need to support VT100 or compatible shell if you want to use arrow keys.
+* SimpleCom sends / receives VT100 escape sequences. So the serial device to connect via SimpleCom needs to support VT100 or compatible shell.
+* SimpleCom supports ANSI chars only, so it would not work if multibyte chars (e.g. CJK chars) are given.
 
 # License
 

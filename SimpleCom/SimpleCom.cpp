@@ -1,20 +1,11 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
-#include <conio.h>
 
 #include <iostream>
 
 #include "SerialSetup.h"
 #include "WinAPIException.h"
-
-#define ARROW_UP    0x48
-#define ARROW_LEFT  0x4b
-#define ARROW_RIGHT 0x4d
-#define ARROW_DOWN  0x50
-
-#define ESC 0x1b;
-
 
 static HANDLE stdoutRedirectorThread;
 
@@ -22,59 +13,16 @@ static HANDLE hSerial;
 static OVERLAPPED serialReadOverlapped = { 0 };
 
 
-static void SetVTConsole(HANDLE hConsole) {
-	BOOL result;
-	DWORD mode;
-
-	result = GetConsoleMode(hConsole, &mode);
-	if (result) {
-		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-	}
-
-	if (getenv("TERM") == NULL) {
-		_putenv("TERM=vt100");
-	}
-
-}
-
-/*
- * Handle allow key for VT escape sequence.
- */
-static bool process_arrow(char* data, int fnch) {
-	data[0] = ESC;
-	data[1] = '[';
-
-	switch (fnch) {
-	case ARROW_UP:
-		data[2] = 'A';
-		return true;
-
-	case ARROW_DOWN:
-		data[2] = 'B';
-		return true;
-
-	case ARROW_RIGHT:
-		data[2] = 'C';
-		return true;
-
-	case ARROW_LEFT:
-		data[2] = 'D';
-		return true;
-
-	default:
-		return false;
-	}
-
-}
-
 /*
  * Entry point for stdin redirector.
  * stdin redirects stdin to serial (write op).
  */
 static void StdInRedirector(HWND parent_hwnd) {
+	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	OVERLAPPED overlapped = { 0 };
-	char data[4];
-	int data_len;
+	TCHAR console_data[4];
+	char send_data[4];
+	DWORD data_len;
 
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (overlapped.hEvent == NULL) {
@@ -84,30 +32,25 @@ static void StdInRedirector(HWND parent_hwnd) {
 	}
 
 	while (true) {
-		int ch = _getch();
-		if ((ch == 0xe0) || (ch == 0x0)) {
-			int fnch = _getch();
-			if ((ch == 0x0) && (fnch == 0x3b)) { // F1 key - it means "finish serial communication" in SimpleCom
-				if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-					break;
-				}
-				else {
-					continue;
-				}
+		ReadConsole(hStdIn, console_data, 4, &data_len, nullptr);
+		if ((data_len == 3) && (console_data[0] == 0x1b) && (console_data[1] == 0x4f) && (console_data[2] == 0x50)) { // F1 key
+			if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+				break;
 			}
-			else if (!process_arrow(data, fnch)) { // allow keys are special in VT. We need to pass VT escape sequence for them.
+			else {
 				continue;
 			}
-			data_len = 3;
 		}
 		else {
-			data[0] = ch;
-			data_len = 1;
+			// ReadConsole() is called as ANS mode (pInputControl is NULL)
+			for (int i = 0; i < data_len; i++) {
+				send_data[i] = console_data[i] & 0xff;
+			}
 		}
 
 		ResetEvent(overlapped.hEvent);
 		DWORD nBytesWritten;
-		if (!WriteFile(hSerial, data, data_len, &nBytesWritten, &overlapped)) {
+		if (!WriteFile(hSerial, send_data, data_len, &nBytesWritten, &overlapped)) {
 			if (GetLastError() == ERROR_IO_PENDING) {
 				if (!GetOverlappedResult(hSerial, &overlapped, &nBytesWritten, TRUE)) {
 					break;
@@ -218,9 +161,19 @@ int main()
 		return -1;
 	}
 
+	DWORD mode;
+
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	GetConsoleMode(hStdIn, &mode);
+	mode &= ~ENABLE_PROCESSED_INPUT;
+	mode &= ~ENABLE_LINE_INPUT;
+	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
+	SetConsoleMode(hStdIn, mode);
+
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetVTConsole(hStdOut);
+	GetConsoleMode(hStdOut, &mode);
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(hStdOut, mode);
 
 	// Create stdout redirector
 	stdoutRedirectorThread = CreateThread(NULL, 0, &StdOutRedirector, NULL, 0, NULL);
