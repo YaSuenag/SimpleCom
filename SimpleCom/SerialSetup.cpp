@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-#include <Windows.h>
-#include <tchar.h>
+#include "stdafx.h"
 
 #include <regex>
 
 #include "SerialSetup.h"
+
 #include "WinAPIException.h"
 #include "resource.h"
 

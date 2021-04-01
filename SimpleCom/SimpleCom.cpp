@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2019, 2021, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-#define _CRT_SECURE_NO_WARNINGS
+#include "stdafx.h"
 
-#include <Windows.h>
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
 
