@@ -11,6 +11,7 @@ static HANDLE stdoutRedirectorThread;
 
 static HANDLE hSerial;
 static OVERLAPPED serialReadOverlapped = { 0 };
+static volatile bool terminated;
 
 
 /*
@@ -31,10 +32,11 @@ static void StdInRedirector(HWND parent_hwnd) {
 		return;
 	}
 
-	while (true) {
+	while (!terminated) {
 		ReadConsole(hStdIn, console_data, 4, &data_len, nullptr);
 		if ((data_len == 3) && (console_data[0] == 0x1b) && (console_data[1] == 0x4f) && (console_data[2] == 0x50)) { // F1 key
 			if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+				terminated = true;
 				break;
 			}
 			else {
@@ -72,7 +74,7 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	char buf;
 	DWORD nBytesRead;
 
-	while (true) {
+	while (!terminated) {
 		ResetEvent(serialReadOverlapped.hEvent);
 		if (!ReadFile(hSerial, &buf, 1, &nBytesRead, &serialReadOverlapped)) {
 			if (GetLastError() == ERROR_IO_PENDING) {
@@ -174,6 +176,8 @@ int main()
 	GetConsoleMode(hStdOut, &mode);
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hStdOut, mode);
+
+	terminated = false;
 
 	// Create stdout redirector
 	stdoutRedirectorThread = CreateThread(NULL, 0, &StdOutRedirector, NULL, 0, NULL);
