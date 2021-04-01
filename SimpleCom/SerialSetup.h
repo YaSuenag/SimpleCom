@@ -18,8 +18,7 @@
  */
 #pragma once
 
-#include <Windows.h>
-#include <tchar.h>
+#include "stdafx.h"
 
 #include <map>
 #include <string>

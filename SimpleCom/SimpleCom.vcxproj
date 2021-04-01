@@ -99,8 +99,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
@@ -136,8 +135,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -156,12 +154,16 @@
   <ItemGroup>
     <ClCompile Include="SerialSetup.cpp" />
     <ClCompile Include="SimpleCom.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="WinAPIException.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EnumValue.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SerialSetup.h" />
+    <ClInclude Include="stdafx.h" />
     <ClInclude Include="WinAPIException.h" />
   </ItemGroup>
   <ItemGroup>
