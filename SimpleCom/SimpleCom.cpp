@@ -177,6 +177,15 @@ int _tmain(int argc, LPCTSTR argv[])
 	SetCommMask(hSerial, EV_RXCHAR);
 	SetupComm(hSerial, 1, 1);
 
+	COMMTIMEOUTS comm_timeouts;
+	GetCommTimeouts(hSerial, &comm_timeouts);
+	comm_timeouts.ReadIntervalTimeout = 1;
+	comm_timeouts.ReadTotalTimeoutMultiplier = 0;
+	comm_timeouts.ReadTotalTimeoutConstant = 10;
+	comm_timeouts.WriteTotalTimeoutMultiplier = 0;
+	comm_timeouts.WriteTotalTimeoutConstant = 0;
+	SetCommTimeouts(hSerial, &comm_timeouts);
+
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
