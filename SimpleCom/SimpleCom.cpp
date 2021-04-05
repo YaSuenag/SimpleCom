@@ -21,6 +21,7 @@
 #include <Windows.h>
 
 #include <iostream>
+#include <vector>
 
 #include "SerialSetup.h"
 #include "WinAPIException.h"
@@ -83,18 +84,20 @@ static void StdInRedirector(HWND parent_hwnd) {
 	CloseHandle(overlapped.hEvent);
 }
 
+#define READ_BUF_SIZE 4096
+
 /*
  * Entry point for stdout redirector.
  * stdout redirects serial (read op) to stdout.
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	char buf;
+	std::vector<char> buf(READ_BUF_SIZE, 0x00);
 	DWORD nBytesRead;
 
 	while (!terminated) {
 		ResetEvent(serialReadOverlapped.hEvent);
-		if (!ReadFile(hSerial, &buf, 1, &nBytesRead, &serialReadOverlapped)) {
+		if (!ReadFile(hSerial, buf.data(), buf.size(), &nBytesRead, &serialReadOverlapped)) {
 			if (GetLastError() == ERROR_IO_PENDING) {
 				if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, TRUE)) {
 					break;
@@ -104,7 +107,7 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 
 		if (nBytesRead > 0) {
 			DWORD nBytesWritten;
-			WriteFile(hStdOut, &buf, nBytesRead, &nBytesWritten, NULL);
+			WriteFile(hStdOut, buf.data(), nBytesRead, &nBytesWritten, NULL);
 		}
 
 	}
@@ -175,7 +178,7 @@ int _tmain(int argc, LPCTSTR argv[])
 	SetCommState(hSerial, &dcb);
 	PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	SetCommMask(hSerial, EV_RXCHAR);
-	SetupComm(hSerial, 1, 1);
+	SetupComm(hSerial, READ_BUF_SIZE, 256);
 
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
