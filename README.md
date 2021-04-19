@@ -17,31 +17,15 @@ I confirmed x64 build on VS 2019.
 
 # How to use on [Windows Terminal](https://github.com/microsoft/terminal)
 
-You can integrate SimpleCom to Windows Terminal if you add following JSON values to `settings.json`.
+You can use [fragments.json](fragments.json) to add SimpleCom to your Windows Terminal.  
+For example, run following commands to add SimpleCom for all users.
 
 ```
-{
-
- ...
-
-  "profiles": [
-
- ...
-
-    {
-      "closeOnExit" : true,
-      "commandline": "C:\\path\\to\\SimpleCom.exe",
-      "cursorColor": "#FFFFFF",
-      "cursorShape": "filledBox",
-      "guid": "{a3177c2a-f5f4-4c95-b877-0d12d6413363}",
-      "name": "SimpleCom"
-    }
-
- ...
-
+PS > mkdir "C:\ProgramData\Microsoft\Windows Terminal\Fragments\SimpleCom"
+PS > cp C:\Path\To\fragment.json "C:\ProgramData\Microsoft\Windows Terminal\Fragments\SimpleCom"
 ```
 
-See [Windows Terminal official document](https://github.com/microsoft/terminal/blob/master/doc/user-docs/UsingJsonSettings.md) for more details.
+Please see [Applications installed from the web](https://docs.microsoft.com/ja-jp/windows/terminal/json-fragment-extensions#applications-installed-from-the-web) in Microsoft Docs.
 
 # Notes
 
