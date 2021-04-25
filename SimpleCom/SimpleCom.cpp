@@ -115,7 +115,7 @@ static HWND GetParentWindow() {
 
 }
 
-int main()
+int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
 	TString device;
@@ -124,7 +124,11 @@ int main()
 	// Serial port configuration
 	try {
 		SerialSetup setup;
-		if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
+		if (argc > 1) {
+			// command line mode
+			setup.ParseArguments(argc, argv);
+		}
+		else if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
 			return -1;
 		}
 		device = _T("\\\\.\\") + setup.GetPort();

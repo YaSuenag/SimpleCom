@@ -105,6 +105,7 @@ public:
 	}
 
 	bool ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept;
+	void ParseArguments(int argc, LPCTSTR argv[]);
 	void SaveToDCB(LPDCB dcb) noexcept;
 };
 

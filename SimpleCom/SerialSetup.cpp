@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include <tchar.h>
 
+#include <regex>
+
 #include "SerialSetup.h"
 #include "WinAPIException.h"
 #include "resource.h"
@@ -216,6 +218,116 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
  */
 bool SerialSetup::ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept {
 	return IDCONNECT == DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP), hWnd, &SettingDlgProc, reinterpret_cast<LPARAM>(this));
+}
+
+/**
+ * Parse command line arguments, and set them to this instance.
+ */
+void SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
+	int i = 1;
+	for (; i < argc; i++) {
+		if ((_tcsncmp(_T("--"), argv[i], 2) == 0) && ((i + 1) == argc)) {
+			throw SerialSetupException(_T("command line argument"), _T("Insufficient command line arguments"));
+		}
+
+		if (_tcscmp(_T("--baud-rate"), argv[i]) == 0) {
+			try {
+				size_t idx;
+				LPCTSTR str = argv[++i];
+				_baud_rate = std::stoi(str, &idx);
+				if (str[idx] != 0) {
+					throw std::invalid_argument("--baud-rate");
+				}
+			}
+			catch (...) {
+				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --baud-rate"));
+			}
+		}
+		else if (_tcscmp(_T("--byte-size"), argv[i]) == 0) {
+			try {
+				size_t idx;
+				LPCTSTR str = argv[++i];
+				_byte_size = std::stoi(str, &idx);
+				if (str[idx] != 0) {
+					throw std::invalid_argument("--byte-size");
+				}
+			}
+			catch (...) {
+				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --byte-size"));
+			}
+		}
+		else if (_tcscmp(_T("--parity"), argv[i]) == 0) {
+			LPCTSTR parity_val = argv[++i];
+			if (_tcscmp(_T("none"), parity_val) == 0) {
+				_parity = const_cast<Parity&>(NO_PARITY);
+			}
+			else if (_tcscmp(_T("odd"), parity_val) == 0) {
+				_parity = const_cast<Parity&>(ODD_PARITY);
+			}
+			else if (_tcscmp(_T("even"), parity_val) == 0) {
+				_parity = const_cast<Parity&>(EVEN_PARITY);
+			}
+			else if (_tcscmp(_T("mark"), parity_val) == 0) {
+				_parity = const_cast<Parity&>(MARK_PARITY);
+			}
+			else if (_tcscmp(_T("space"), parity_val) == 0) {
+				_parity = const_cast<Parity&>(SPACE_PARITY);
+			}
+			else {
+				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --parity"));
+			}
+		}
+		else if (_tcscmp(_T("--stop-bits"), argv[i]) == 0) {
+			LPCTSTR sb_val = argv[++i];
+			if (_tcscmp(_T("1"), sb_val) == 0) {
+				_stop_bits = const_cast<StopBits&>(ONE);
+			}
+			else if (_tcscmp(_T("1.5"), sb_val) == 0) {
+				_stop_bits = const_cast<StopBits&>(ONE5);
+			}
+			else if (_tcscmp(_T("2"), sb_val) == 0) {
+				_stop_bits = const_cast<StopBits&>(TWO);
+			}
+			else {
+				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --stop-bits"));
+			}
+		}
+		else if (_tcscmp(_T("--flow-control"), argv[i]) == 0) {
+			LPCTSTR fc_val = argv[++i];
+			if (_tcscmp(_T("none"), fc_val) == 0) {
+				_flow_control = const_cast<FlowControl&>(NONE);
+			}
+			else if (_tcscmp(_T("hardware"), fc_val) == 0) {
+				_flow_control = const_cast<FlowControl&>(HARDWARE);
+			}
+			else if (_tcscmp(_T("software"), fc_val) == 0) {
+				_flow_control = const_cast<FlowControl&>(SOFTWARE);
+			}
+			else {
+				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --flow-control"));
+			}
+		}
+		else {
+#ifdef _UNICODE
+			std::wregex re(_T("^COM\\d+$"));
+#else
+			std::regex re("^COM\\d+$");
+#endif
+			if (std::regex_match(argv[i], re)) {
+				SetPort(argv[i]);
+			}
+			else {
+				throw SerialSetupException(_T("command line argument"), _T("Unknown serial port"));
+			}
+		}
+	}
+
+	if (i != argc) {
+		throw SerialSetupException(_T("command line argument"), _T("Illegal command line options"));
+	}
+	else if (_port.empty()) {
+		throw SerialSetupException(_T("command line argument"), _T("Serial port is not specified"));
+	}
 }
 
 /*
