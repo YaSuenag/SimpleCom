@@ -187,6 +187,11 @@ int _tmain(int argc, LPCTSTR argv[])
 	SetCommTimeouts(hSerial, &comm_timeouts);
 
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	serialReadOverlapped.Internal = 0;
+	serialReadOverlapped.InternalHigh = 0;
+	serialReadOverlapped.Offset = 0;
+	serialReadOverlapped.OffsetHigh = 0;
+	
 	if (serialReadOverlapped.hEvent == NULL) {
 		WinAPIException ex(GetLastError(), _T("SimpleCom"));
 		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
