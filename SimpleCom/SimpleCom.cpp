@@ -21,7 +21,6 @@
 #include <Windows.h>
 
 #include <iostream>
-#include <vector>
 
 #include "SerialSetup.h"
 #include "WinAPIException.h"
@@ -31,6 +30,8 @@ static HANDLE stdoutRedirectorThread;
 static HANDLE hSerial;
 static OVERLAPPED serialReadOverlapped = { 0 };
 static volatile bool terminated;
+
+constexpr int buf_sz = 256;
 
 
 /*
@@ -58,10 +59,9 @@ static bool WriteToSerial(OVERLAPPED overlapped, const char *data, DWORD len, LP
 static void StdInRedirector(HWND parent_hwnd) {
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	OVERLAPPED overlapped = { 0 };
-	constexpr int buflen = 100;
-	INPUT_RECORD inputs[buflen];
+	INPUT_RECORD inputs[buf_sz];
 	DWORD n_read;
-	char send_data[buflen];
+	char send_data[buf_sz];
 	DWORD n_sends;
 
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -73,7 +73,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 
 	while (!terminated) {
 
-		if (!ReadConsoleInput(hStdIn, inputs, buflen, &n_read)) {
+		if (!ReadConsoleInput(hStdIn, inputs, buf_sz, &n_read)) {
 			WinAPIException ex(GetLastError(), _T("SimpleCom"));
 			MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
 			goto exit_stdinredirector;
@@ -101,7 +101,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 				if (keyevent.bKeyDown) {
 					for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
 						send_data[n_sends++] = keyevent.uChar.AsciiChar;
-						if (n_sends == buflen) {
+						if (n_sends == buf_sz) {
 							if (!WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten)) {
 								goto exit_stdinredirector;
 							}
@@ -128,30 +128,46 @@ exit_stdinredirector:
 	CloseHandle(overlapped.hEvent);
 }
 
-#define READ_BUF_SIZE 4096
-
 /*
  * Entry point for stdout redirector.
  * stdout redirects serial (read op) to stdout.
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	std::vector<char> buf(READ_BUF_SIZE, 0x00);
-	DWORD nBytesRead;
+	char buf[buf_sz] = { 0 };
+	DWORD nBytesRead = 0;
 
 	while (!terminated) {
 		ResetEvent(serialReadOverlapped.hEvent);
-		if (!ReadFile(hSerial, buf.data(), buf.size(), &nBytesRead, &serialReadOverlapped)) {
+		DWORD event_mask = 0;
+		if (!WaitCommEvent(hSerial, &event_mask, &serialReadOverlapped)) {
 			if (GetLastError() == ERROR_IO_PENDING) {
 				if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, TRUE)) {
-					break;
+					return -1;
 				}
 			}
 		}
 
+		if (event_mask & EV_RXCHAR) {
+			DWORD errors;
+			COMSTAT comstat = { 0 };
+			if (!ClearCommError(hSerial, &errors, &comstat)) {
+				return -1;
+			}
+
+			if (!ReadFile(hSerial, buf, min(buf_sz, comstat.cbInQue), &nBytesRead, &serialReadOverlapped)) {
+				if (GetLastError() == ERROR_IO_PENDING) {
+					if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
+						return -1;
+					}
+				}
+			}
+
+		}
+
 		if (nBytesRead > 0) {
 			DWORD nBytesWritten;
-			WriteFile(hStdOut, buf.data(), nBytesRead, &nBytesWritten, NULL);
+			WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL);
 		}
 
 	}
@@ -222,7 +238,7 @@ int _tmain(int argc, LPCTSTR argv[])
 	SetCommState(hSerial, &dcb);
 	PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	SetCommMask(hSerial, EV_RXCHAR);
-	SetupComm(hSerial, READ_BUF_SIZE, 256);
+	SetupComm(hSerial, buf_sz, buf_sz);
 
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
