@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleCom", "SimpleCom\SimpleCom.vcxproj", "{72CF801B-E1B4-4625-B2D3-F6657DBD9B68}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{A674E82C-94C3-4498-883C-E987BFFEC772}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{72CF801B-E1B4-4625-B2D3-F6657DBD9B68}.Release|x64.Build.0 = Release|x64
 		{72CF801B-E1B4-4625-B2D3-F6657DBD9B68}.Release|x86.ActiveCfg = Release|Win32
 		{72CF801B-E1B4-4625-B2D3-F6657DBD9B68}.Release|x86.Build.0 = Release|Win32
+		{A674E82C-94C3-4498-883C-E987BFFEC772}.Debug|x64.ActiveCfg = Debug
+		{A674E82C-94C3-4498-883C-E987BFFEC772}.Debug|x86.ActiveCfg = Debug
+		{A674E82C-94C3-4498-883C-E987BFFEC772}.Release|x64.ActiveCfg = Release
+		{A674E82C-94C3-4498-883C-E987BFFEC772}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
