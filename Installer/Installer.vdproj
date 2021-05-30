@@ -15,6 +15,12 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_0A0C9F61E94DE5A8155031222CDE9264"
+        "OwnerKey" = "8:_7E1119B957124B09883E727B6817AD17"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_4E1D102BF9964083898B379307C77C46"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -23,6 +29,24 @@
         {
         "MsmKey" = "8:_5A45DEACD74B4995B6D907AD85EA01B2"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7E1119B957124B09883E727B6817AD17"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_7E1119B957124B09883E727B6817AD17"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_0A0C9F61E94DE5A8155031222CDE9264"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -97,6 +121,51 @@
     {
         "CustomAction"
         {
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_8394792B65C14AB7AB981945DC0D630D"
+            {
+            "Name" = "8:プライマリ出力 from InstallerCustomActions (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_7E1119B957124B09883E727B6817AD17"
+            "FileType" = "3:1"
+            "InstallAction" = "3:1"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_89C7B465_B392_41C5_B6B5_D11860944135"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:/TargetDir=\"[TARGETDIR] \" /allusers=\"[ALLUSERS]\""
+            "Run64Bit" = "11:TRUE"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_AC4A21EF361744E28B3A1A286B360D38"
+            {
+            "Name" = "8:プライマリ出力 from InstallerCustomActions (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_7E1119B957124B09883E727B6817AD17"
+            "FileType" = "3:1"
+            "InstallAction" = "3:3"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_550B2E0A_741E_4924_96B4_A4E345ED2FC7"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:/TargetDir=\"[TARGETDIR] \" /allusers=\"[ALLUSERS]\""
+            "Run64Bit" = "11:TRUE"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_E373D6F82DF541728E4DC240DD9FFCEF"
+            {
+            "Name" = "8:プライマリ出力 from InstallerCustomActions (Active)"
+            "Condition" = "8:"
+            "Object" = "8:_7E1119B957124B09883E727B6817AD17"
+            "FileType" = "3:1"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_58A6E92B_CF90_43A2_953D_9A46BF59BCC6"
+            "InstallerClass" = "11:TRUE"
+            "CustomActionData" = "8:/TargetDir=\"[TARGETDIR] \" /allusers=\"[ALLUSERS]\""
+            "Run64Bit" = "11:TRUE"
+            }
         }
         "DefaultFeature"
         {
@@ -108,10 +177,49 @@
         {
             "LaunchCondition"
             {
+                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_DDFA30C4163443079CF47AE2135EFFF8"
+                {
+                "Name" = "8:.NET Framework"
+                "Message" = "8:[VSDNETMSG]"
+                "FrameworkVersion" = "8:.NETFramework,Version=v4.7.2"
+                "AllowLaterVersions" = "11:FALSE"
+                "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=863262"
+                }
             }
         }
         "File"
         {
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0A0C9F61E94DE5A8155031222CDE9264"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+                "ScatterAssemblies"
+                {
+                    "_0A0C9F61E94DE5A8155031222CDE9264"
+                    {
+                    "Name" = "8:System.Net.Http.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Net.Http.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_94D5B72B21EF48D697B10AD74417285E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4E1D102BF9964083898B379307C77C46"
             {
             "SourcePath" = "8:..\\README.md"
@@ -200,7 +308,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:SimpleCom"
         "ProductCode" = "8:{C3DBFF02-E477-4F05-BE5F-A35D7399DE97}"
-        "PackageCode" = "8:{19303467-D50E-42A9-8EA1-0A3E1F1E7AC5}"
+        "PackageCode" = "8:{497AF46E-7240-4985-BF88-1EFDE8B06108}"
         "UpgradeCode" = "8:{F33BE402-825E-46C8-8799-EF7E3AE9C357}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
@@ -770,6 +878,34 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{72CF801B-E1B4-4625-B2D3-F6657DBD9B68}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_7E1119B957124B09883E727B6817AD17"
+            {
+            "SourcePath" = "8:..\\InstallerCustomActions\\obj\\Release\\InstallerCustomActions.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_94D5B72B21EF48D697B10AD74417285E"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{3D42B9EA-7DC3-4C85-B7A7-6CF3EC2DF28E}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {

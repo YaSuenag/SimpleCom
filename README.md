@@ -52,6 +52,15 @@ Console app for serial connection.
 Use [SimpleCom.sln](https://github.com/YaSuenag/SimpleCom/blob/master/SimpleCom.sln) on your Visual Studio.  
 I confirmed x64 build on VS 2019.
 
+## Distribution package
+
+You can get distribution package when you do release build.
+
+* [dist](dist): ZIP archive
+* [Installer](Installer): MSI installer
+
+MSI installer installes SimpleCom.exe and README.md (and also custom action assembly). It will deploy JSON fragment for SimpleCom into `%ProgramData%` or `%LocalAppData%` (it depends on install user choice). So the use can use SimpleCom without any configuration (as following) on Windows Terminal.
+
 # How to use on [Windows Terminal](https://github.com/microsoft/terminal)
 
 You can use [fragments.json](fragments.json) to add SimpleCom to your Windows Terminal.  
