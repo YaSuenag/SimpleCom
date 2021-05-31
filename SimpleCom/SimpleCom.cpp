@@ -34,18 +34,16 @@ static volatile bool terminated;
  * Write data to serial line.
  * Return true if succeeded.
  */
-static bool WriteToSerial(OVERLAPPED overlapped, const char *data, DWORD len, LPDWORD nBytesWritten) {
+static void WriteToSerial(OVERLAPPED overlapped, const char *data, DWORD len, LPDWORD nBytesWritten) {
 	ResetEvent(overlapped.hEvent);
 
 	if (!WriteFile(hSerial, data, len, nBytesWritten, &overlapped)) {
 		if (GetLastError() == ERROR_IO_PENDING) {
 			if (!GetOverlappedResult(hSerial, &overlapped, nBytesWritten, TRUE)) {
-				return false;
+				throw WinAPIException(GetLastError(), _T("SimpleCom"));
 			}
 		}
 	}
-
-	return true;
 }
 
 /*
@@ -68,59 +66,57 @@ static void StdInRedirector(HWND parent_hwnd) {
 		return;
 	}
 
-	while (!terminated) {
+	try {
+		while (!terminated) {
 
-		if (!ReadConsoleInput(hStdIn, inputs, buflen, &n_read)) {
-			WinAPIException ex(GetLastError(), _T("SimpleCom"));
-			MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
-			goto exit_stdinredirector;
-		}
+			if (!ReadConsoleInput(hStdIn, inputs, buflen, &n_read)) {
+				throw WinAPIException(GetLastError(), _T("SimpleCom"));
+			}
 
-		n_sends = 0;
-		DWORD nBytesWritten;
-		for (DWORD idx = 0; idx < n_read; idx++) {
-			if (inputs[idx].EventType == KEY_EVENT) {
-				KEY_EVENT_RECORD keyevent = inputs[idx].Event.KeyEvent;
+			n_sends = 0;
+			DWORD nBytesWritten;
+			for (DWORD idx = 0; idx < n_read; idx++) {
+				if (inputs[idx].EventType == KEY_EVENT) {
+					KEY_EVENT_RECORD keyevent = inputs[idx].Event.KeyEvent;
 
-				if (keyevent.wVirtualKeyCode == VK_F1) {
-					// Flush all keys before F1
-					if (n_sends > 0) {
-						if (!WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten)) {
-							goto exit_stdinredirector;
-						}
-					}
-
-					if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-						goto exit_stdinredirector;
-					}
-				}
-
-				if (keyevent.bKeyDown) {
-					for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
-						send_data[n_sends++] = keyevent.uChar.AsciiChar;
-						if (n_sends == buflen) {
-							if (!WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten)) {
-								goto exit_stdinredirector;
-							}
+					if (keyevent.wVirtualKeyCode == VK_F1) {
+						// Flush all keys before F1
+						if (n_sends > 0) {
+							WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten);
 							n_sends = 0;
 						}
+
+						if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+							terminated = true;
+							break;
+						}
+					}
+
+					if (keyevent.bKeyDown) {
+						for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
+							send_data[n_sends++] = keyevent.uChar.AsciiChar;
+							if (n_sends == buflen) {
+								WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten);
+								n_sends = 0;
+							}
+						}
+
 					}
 
 				}
 
 			}
 
-		}
-
-		if (n_sends > 0) {
-			if (!WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten)) {
-				goto exit_stdinredirector;
+			if (n_sends > 0) {
+				WriteToSerial(overlapped, send_data, n_sends, &nBytesWritten);
 			}
-		}
 
+		}
+	}
+	catch (WinAPIException e) {
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 	}
 
-exit_stdinredirector:
 	terminated = true;
 	CloseHandle(overlapped.hEvent);
 }
