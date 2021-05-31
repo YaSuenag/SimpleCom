@@ -78,7 +78,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 
 		n_sends = 0;
 		DWORD nBytesWritten;
-		for (int idx = 0; idx < n_read; idx++) {
+		for (DWORD idx = 0; idx < n_read; idx++) {
 			if (inputs[idx].EventType == KEY_EVENT) {
 				KEY_EVENT_RECORD keyevent = inputs[idx].Event.KeyEvent;
 
