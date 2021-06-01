@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "SerialSetup.h"
+#include "SerialPortWriter.h"
 #include "WinAPIException.h"
 
 static HANDLE stdoutRedirectorThread;
@@ -33,66 +34,28 @@ static constexpr int buf_sz = 256;
 
 
 /*
- * Write data to serial line.
- * Throws WinAPIException if failed.
- */
-static void WriteToSerial(OVERLAPPED *overlapped, char *data, DWORD len) {
-	DWORD total_written_bytes = 0;
-	while (total_written_bytes < len) {
-		DWORD n_bytes_written;
-		ResetEvent(overlapped->hEvent);
-
-		if (!WriteFile(hSerial, data, len, &n_bytes_written, overlapped)) {
-			DWORD last_error = GetLastError();
-
-			if (last_error == ERROR_IO_PENDING) {
-				GetOverlappedResult(hSerial, overlapped, &n_bytes_written, TRUE);
-				last_error = GetLastError();
-			}
-
-			if (last_error != ERROR_SUCCESS) {
-				throw WinAPIException(GetLastError(), _T("SimpleCom"));
-			}
-
-		}
-
-		total_written_bytes += n_bytes_written;
-		data += n_bytes_written;
-		len -= n_bytes_written;
-	}
-}
-
-/*
  * Write key code in KEY_EVENT_RECORD to send buffer.
  * If F1 key is found, all of send_data would be flushed and would set true to terminated flag.
  * Return the index of send_data to write next one.
  */
-static DWORD ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, char *send_data, const DWORD send_data_sz, DWORD n_sends, OVERLAPPED *overlapped, const HWND parent_hwnd) {
+static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter &writer, const HWND parent_hwnd) {
 
 	if (keyevent.wVirtualKeyCode == VK_F1) {
-		// Flush all keys before F1
-		if (n_sends > 0) {
-			WriteToSerial(overlapped, send_data, n_sends);
-			n_sends = 0;
-		}
+		// Write all keys in the buffer before F1
+		writer.WriteAsync();
 
 		if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 			terminated = true;
-			return n_sends;
+			return;
 		}
 	}
 
 	if (keyevent.bKeyDown) {
 		for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
-			send_data[n_sends++] = keyevent.uChar.AsciiChar;
-			if (n_sends == send_data_sz) {
-				WriteToSerial(overlapped, send_data, n_sends);
-				n_sends = 0;
-			}
+			writer.Put(keyevent.uChar.AsciiChar);
 		}
 	}
 
-	return n_sends;
 }
 
 /*
@@ -101,18 +64,10 @@ static DWORD ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, char *send_data, 
  */
 static void StdInRedirector(HWND parent_hwnd) {
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	OVERLAPPED overlapped = { 0 };
 	INPUT_RECORD inputs[buf_sz];
 	DWORD n_read;
-	char send_data[buf_sz];
-	DWORD n_sends;
 
-	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (overlapped.hEvent == NULL) {
-		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		return;
-	}
+	SerialPortWriter writer(hSerial, buf_sz);
 
 	try {
 		while (!terminated) {
@@ -121,17 +76,13 @@ static void StdInRedirector(HWND parent_hwnd) {
 				throw WinAPIException(GetLastError(), _T("SimpleCom"));
 			}
 
-			n_sends = 0;
 			for (DWORD idx = 0; idx < n_read; idx++) {
 				if (inputs[idx].EventType == KEY_EVENT) {
-					n_sends = ProcessKeyEvents(inputs[idx].Event.KeyEvent, send_data, sizeof(send_data), n_sends, &overlapped, parent_hwnd);
+					ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, parent_hwnd);
 				}
 			}
 
-			if (n_sends > 0) {
-				WriteToSerial(&overlapped, send_data, n_sends);
-			}
-
+			writer.WriteAsync();
 		}
 	}
 	catch (WinAPIException e) {
@@ -139,7 +90,6 @@ static void StdInRedirector(HWND parent_hwnd) {
 	}
 
 	terminated = true;
-	CloseHandle(overlapped.hEvent);
 }
 
 /*
