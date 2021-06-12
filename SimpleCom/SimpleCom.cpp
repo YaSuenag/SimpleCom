@@ -119,20 +119,27 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 				return -1;
 			}
 
-			if (!ReadFile(hSerial, buf, min(buf_sz, comstat.cbInQue), &nBytesRead, &serialReadOverlapped)) {
-				if (GetLastError() == ERROR_IO_PENDING) {
-					if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
-						return -1;
+			DWORD remainBytes = comstat.cbInQue;
+			while (remainBytes > 0) {
+
+				if (!ReadFile(hSerial, buf, min(buf_sz, remainBytes), &nBytesRead, &serialReadOverlapped)) {
+					if (GetLastError() == ERROR_IO_PENDING) {
+						if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
+							return -1;
+						}
 					}
 				}
+
+				if (nBytesRead > 0) {
+					DWORD nBytesWritten;
+					WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL);
+					remainBytes -= nBytesRead;
+				}
+
 			}
 
 		}
 
-		if (nBytesRead > 0) {
-			DWORD nBytesWritten;
-			WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL);
-		}
 
 	}
 
