@@ -98,22 +98,40 @@ static void StdInRedirector(HWND parent_hwnd) {
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	char buf;
-	DWORD nBytesRead;
+	char buf[buf_sz] = { 0 };
+	DWORD nBytesRead = 0;
 
 	while (!terminated) {
 		ResetEvent(serialReadOverlapped.hEvent);
-		if (!ReadFile(hSerial, &buf, 1, &nBytesRead, &serialReadOverlapped)) {
+		DWORD event_mask = 0;
+		if (!WaitCommEvent(hSerial, &event_mask, &serialReadOverlapped)) {
 			if (GetLastError() == ERROR_IO_PENDING) {
 				if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, TRUE)) {
-					break;
+					return -1;
 				}
 			}
 		}
 
+		if (event_mask & EV_RXCHAR) {
+			DWORD errors;
+			COMSTAT comstat = { 0 };
+			if (!ClearCommError(hSerial, &errors, &comstat)) {
+				return -1;
+			}
+
+			if (!ReadFile(hSerial, buf, min(buf_sz, comstat.cbInQue), &nBytesRead, &serialReadOverlapped)) {
+				if (GetLastError() == ERROR_IO_PENDING) {
+					if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
+						return -1;
+					}
+				}
+			}
+
+		}
+
 		if (nBytesRead > 0) {
 			DWORD nBytesWritten;
-			WriteFile(hStdOut, &buf, nBytesRead, &nBytesWritten, NULL);
+			WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL);
 		}
 
 	}
@@ -184,7 +202,7 @@ int _tmain(int argc, LPCTSTR argv[])
 	SetCommState(hSerial, &dcb);
 	PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	SetCommMask(hSerial, EV_RXCHAR);
-	SetupComm(hSerial, 1, 1);
+	SetupComm(hSerial, buf_sz, buf_sz);
 
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
