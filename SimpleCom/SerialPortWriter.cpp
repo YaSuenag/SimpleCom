@@ -26,11 +26,8 @@ SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
 	_handle = handle;
 	_overlapped = { 0 };
 
-	_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	_overlapped.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 	if (_overlapped.hEvent == NULL) {
-		throw WinAPIException(GetLastError(), _T("SimpleCom"));
-	}
-	if (!SetEvent(_overlapped.hEvent)) {
 		throw WinAPIException(GetLastError(), _T("SimpleCom"));
 	}
 
