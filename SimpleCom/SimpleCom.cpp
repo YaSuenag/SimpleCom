@@ -18,11 +18,10 @@
  */
 #include "stdafx.h"
 
-#include <iostream>
-
 #include "SerialSetup.h"
 #include "SerialPortWriter.h"
 #include "WinAPIException.h"
+#include "debug.h"
 
 static HANDLE stdoutRedirectorThread;
 
@@ -204,21 +203,21 @@ int _tmain(int argc, LPCTSTR argv[])
 	}
 
 	TString title = _T("SimpleCom: ") + device;
-	SetConsoleTitle(title.c_str());
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleTitle(title.c_str()), TRUE)
 
-	SetCommState(hSerial, &dcb);
-	PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-	SetCommMask(hSerial, EV_RXCHAR);
-	SetupComm(hSerial, buf_sz, buf_sz);
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommState(hSerial, &dcb), TRUE)
+	CALL_WINAPI_WITH_DEBUGLOG(PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR), TRUE)
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommMask(hSerial, EV_RXCHAR), TRUE)
+	CALL_WINAPI_WITH_DEBUGLOG(SetupComm(hSerial, buf_sz, buf_sz), TRUE)
 
 	COMMTIMEOUTS comm_timeouts;
-	GetCommTimeouts(hSerial, &comm_timeouts);
+	CALL_WINAPI_WITH_DEBUGLOG(GetCommTimeouts(hSerial, &comm_timeouts), TRUE)
 	comm_timeouts.ReadIntervalTimeout = 0;
 	comm_timeouts.ReadTotalTimeoutMultiplier = 0;
 	comm_timeouts.ReadTotalTimeoutConstant = 10;
 	comm_timeouts.WriteTotalTimeoutMultiplier = 0;
 	comm_timeouts.WriteTotalTimeoutConstant = 0;
-	SetCommTimeouts(hSerial, &comm_timeouts);
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommTimeouts(hSerial, &comm_timeouts), TRUE)
 
 	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (serialReadOverlapped.hEvent == NULL) {
@@ -231,16 +230,16 @@ int _tmain(int argc, LPCTSTR argv[])
 	DWORD mode;
 
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	GetConsoleMode(hStdIn, &mode);
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdIn, &mode), TRUE)
 	mode &= ~ENABLE_PROCESSED_INPUT;
 	mode &= ~ENABLE_LINE_INPUT;
 	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
-	SetConsoleMode(hStdIn, mode);
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdIn, mode), TRUE)
 
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	GetConsoleMode(hStdOut, &mode);
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE);
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(hStdOut, mode);
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE);
 
 	terminated = false;
 

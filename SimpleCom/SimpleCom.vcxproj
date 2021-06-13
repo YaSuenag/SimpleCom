@@ -159,6 +159,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="debug.cpp" />
     <ClCompile Include="SerialPortWriter.cpp" />
     <ClCompile Include="SerialSetup.cpp" />
     <ClCompile Include="SimpleCom.cpp" />
@@ -168,6 +169,7 @@
     <ClCompile Include="WinAPIException.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debug.h" />
     <ClInclude Include="EnumValue.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SerialPortWriter.h" />
