@@ -222,7 +222,6 @@ static void InitConsole(HANDLE *hStdIn, HANDLE *hStdOut) {
 	}
 	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(*hStdIn, &mode), TRUE, __FILE__, __LINE__)
 	mode &= ~ENABLE_PROCESSED_INPUT;
-	mode &= ~ENABLE_LINE_INPUT;
 	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(*hStdIn, mode), TRUE, __FILE__, __LINE__)
 
