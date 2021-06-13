@@ -18,10 +18,7 @@
  */
 #include "stdafx.h"
 
-#include <regex>
-
 #include "SerialSetup.h"
-
 #include "WinAPIException.h"
 #include "resource.h"
 
@@ -71,26 +68,46 @@ SerialSetup::~SerialSetup()
 	// Do nothing
 }
 
+/*
+ * RAII class for Registry key
+ */
+class RegistryKeyHandler {
+private:
+	HKEY hKey;
+
+public:
+	RegistryKeyHandler(HKEY hOpenKey, LPCTSTR lpSubKey, DWORD ulOptions, REGSAM samDesired) {
+		LSTATUS status = RegOpenKeyEx(hOpenKey, lpSubKey, ulOptions, samDesired, &hKey);
+		if (status != ERROR_SUCCESS) {
+			hKey = static_cast<HKEY>(INVALID_HANDLE_VALUE);
+			throw WinAPIException(GetLastError(), lpSubKey);
+		}
+	}
+
+	~RegistryKeyHandler() {
+		if (hKey != INVALID_HANDLE_VALUE) {
+			RegCloseKey(hKey);
+		}
+	}
+
+	HKEY key() {
+		return hKey;
+	}
+};
+
 void SerialSetup::initialize() {
 	// Generates device map of serial interface name and device name
 	// from HKLM\HARDWARE\DEVICEMAP\SERIALCOMM.
 
-	HKEY hKey;
-	LSTATUS status;
-
-	status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DEVICEMAP\\SERIALCOMM"), REG_OPTION_OPEN_LINK, KEY_READ, &hKey);
-	if (status != ERROR_SUCCESS) {
-		throw WinAPIException(status, _T("HKLM\\HARDWARE\\DEVICEMAP\\SERIALCOMM"));
-	}
+	RegistryKeyHandler hkeyHandler(HKEY_LOCAL_MACHINE, _T(R"(HARDWARE\DEVICEMAP\SERIALCOMM)"), REG_OPTION_OPEN_LINK, KEY_READ);
+	HKEY hKey = hkeyHandler.key();
 
 	DWORD numValues, maxValueNameLen, maxValueLen;
-	status = RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &numValues, &maxValueNameLen, &maxValueLen, NULL, NULL);
+	LSTATUS status = RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &numValues, &maxValueNameLen, &maxValueLen, NULL, NULL);
 	if (status != ERROR_SUCCESS) {
-		RegCloseKey(hKey);
-		throw WinAPIException(status, _T("RegQueryInfoKey()"));
+		throw WinAPIException(status, _T("RegQueryInfoKey"));
 	}
-	if (numValues <= 0) {
-		RegCloseKey(hKey);
+	else if (numValues <= 0) {
 		throw SerialSetupException(_T("configuration"), _T("Serial interface not found"));
 	}
 
@@ -112,7 +129,16 @@ void SerialSetup::initialize() {
 
 	delete[] InterfaceName;
 	delete[] DeviceName;
-	RegCloseKey(hKey);
+}
+
+static void AddStringToComboBox(HWND hCombo, TString str) {
+	LRESULT result = SendMessage(hCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
+	if (result == CB_ERR) {
+		throw WinAPIException(_T("CB_ERR"), _T("AddStringToComboBox"));
+	}
+	else if (result == CB_ERRSPACE) {
+		throw WinAPIException(_T("CB_ERRSPACE"), _T("AddStringToComboBox"));
+	}
 }
 
 static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
@@ -122,34 +148,50 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
 	TString text_str;
 
 	HWND hComboSerialDevice = GetDlgItem(hDlg, IDC_SERIAL_DEVICE);
+	if (hComboSerialDevice == NULL) {
+		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
+	}
 	for (auto itr = setup->GetDevices().begin(); itr != setup->GetDevices().end(); itr++) {
 		text_str = itr->first + _T(": ") + itr->second;
-		SendMessage(hComboSerialDevice, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text_str.c_str()));
+		AddStringToComboBox(hComboSerialDevice, text_str);
 	}
 	SendMessage(hComboSerialDevice, CB_SETCURSEL, 0, 0);
 
 	text_str = TO_STRING(setup->GetBaudRate());
-	SetDlgItemText(hDlg, IDC_BAUD_RATE, text_str.c_str());
+	if (!SetDlgItemText(hDlg, IDC_BAUD_RATE, text_str.c_str())) {
+		throw WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BAUD_RATE)"));
+	}
 
 	text_str = TO_STRING(setup->GetByteSize());
-	SetDlgItemText(hDlg, IDC_BYTE_SIZE, text_str.c_str());
+	if (!SetDlgItemText(hDlg, IDC_BYTE_SIZE, text_str.c_str())) {
+		throw WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BYTE_SIZE)"));
+	}
 
 	HWND hComboParity = GetDlgItem(hDlg, IDC_PARITY);
+	if (hComboParity == NULL) {
+		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_PARITY)"));
+	}
 	for (auto parity : parities) {
-		SendMessage(hComboParity, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(parity.tstr()));
+		AddStringToComboBox(hComboParity, parity.tstr());
 	}
 	SendMessage(hComboParity, CB_SETCURSEL, 0, 0);
 
 
 	HWND hComboStopBits = GetDlgItem(hDlg, IDC_STOP_BITS);
+	if (hComboStopBits == NULL) {
+		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STOP_BITS)"));
+	}
 	for (auto stopbit : stopbits) {
-		SendMessage(hComboStopBits, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(stopbit.tstr()));
+		AddStringToComboBox(hComboStopBits, stopbit.tstr());
 	}
 	SendMessage(hComboStopBits, CB_SETCURSEL, 0, 0);
 
 	HWND hComboFlowCtl = GetDlgItem(hDlg, IDC_FLOW_CTL);
+	if (hComboFlowCtl == NULL) {
+		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_FLOW_CTL)"));
+	}
 	for (auto flowctl : flowctrls) {
-		SendMessage(hComboFlowCtl, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(flowctl.tstr()));
+		AddStringToComboBox(hComboFlowCtl, flowctl.tstr());
 	}
 	SendMessage(hComboFlowCtl, CB_SETCURSEL, 0, 0);
 }
@@ -159,12 +201,15 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
  * Return true if all configuration are retrieved and they are valid.
  */
 static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
-	int selected_idx;;
+	int selected_idx;
 
 	// Iterating order of std::map is guaranteed.
 	// So we can get map entry from the index of combo box.
 	// https://stackoverflow.com/questions/7648756/is-the-order-of-iterating-through-stdmap-known-and-guaranteed-by-the-standard
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_SERIAL_DEVICE), CB_GETCURSEL, 0, 0));
+	if (selected_idx == CB_ERR) {
+		throw WinAPIException(_T("No item is selected"), _T("IDC_SERIAL_DEVICE"));
+	}
 	auto target = setup->GetDevices().begin();
 	for (int i = 0; i < selected_idx; i++, target++) {
 		// Do nothing
@@ -187,12 +232,21 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 	setup->SetByteSize(intval);
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_PARITY), CB_GETCURSEL, 0, 0));
+	if (selected_idx == CB_ERR) {
+		throw WinAPIException(_T("No item is selected"), _T("IDC_PARITY"));
+	}
 	setup->SetParity(const_cast<Parity &>(parities[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_STOP_BITS), CB_GETCURSEL, 0, 0));
+	if (selected_idx == CB_ERR) {
+		throw WinAPIException(_T("No item is selected"), _T("IDC_STOP_BITS"));
+	}
 	setup->SetStopBits(const_cast<StopBits&>(stopbits[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_FLOW_CTL), CB_GETCURSEL, 0, 0));
+	if (selected_idx == CB_ERR) {
+		throw WinAPIException(_T("No item is selected"), _T("IDC_FLOW_CTL"));
+	}
 	setup->SetFlowControl(const_cast<FlowControl&>(flowctrls[selected_idx]));
 
 	return true;
@@ -204,7 +258,8 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
 	static SerialSetup* setup;
 	
-	switch (msg) {
+	try {
+		switch (msg) {
 		case WM_INITDIALOG:
 			setup = reinterpret_cast<SerialSetup*>(lParam);
 			InitializeDialog(hDlg, setup);
@@ -225,6 +280,11 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 		case WM_CLOSE:
 			EndDialog(hDlg, IDCANCEL);
 			return TRUE;
+		}
+	}
+	catch (WinAPIException& e) {
+		MessageBox(hDlg, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		return FALSE;
 	}
 
 	return FALSE;

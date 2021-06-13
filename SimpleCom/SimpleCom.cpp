@@ -84,11 +84,63 @@ static void StdInRedirector(HWND parent_hwnd) {
 			writer.WriteAsync();
 		}
 	}
-	catch (WinAPIException e) {
-		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+	catch (WinAPIException& e) {
+		if (!terminated) {
+			MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		}
 	}
 
 	terminated = true;
+}
+
+static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
+	DWORD event_mask = 0;
+	if (!WaitCommEvent(hSerial, &event_mask, &serialReadOverlapped)) {
+		if (GetLastError() == ERROR_IO_PENDING) {
+			DWORD unused = 0;
+			if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &unused, TRUE)) {
+				throw WinAPIException(GetLastError(), _T("GetOverlappedResult for WaitCommEvent"));
+			}
+		}
+		else {
+			throw WinAPIException(GetLastError(), _T("WaitCommEvent"));
+		}
+	}
+
+	if (event_mask & EV_RXCHAR) {
+		DWORD errors;
+		COMSTAT comstat = { 0 };
+		if (!ClearCommError(hSerial, &errors, &comstat)) {
+			throw WinAPIException(GetLastError(), _T("ClearCommError"));
+		}
+
+		char buf[buf_sz] = { 0 };
+		DWORD nBytesRead = 0;
+		DWORD remainBytes = comstat.cbInQue;
+		while (remainBytes > 0) {
+
+			if (!ReadFile(hSerial, buf, min(buf_sz, remainBytes), &nBytesRead, &serialReadOverlapped)) {
+				if (GetLastError() == ERROR_IO_PENDING) {
+					if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
+						throw WinAPIException(GetLastError(), _T("GetOverlappedResult for ReadFile"));
+					}
+				}
+				else {
+					throw WinAPIException(GetLastError(), _T("ReadFile from serial device"));
+				}
+			}
+
+			if (nBytesRead > 0) {
+				DWORD nBytesWritten;
+				if (!WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL)) {
+					throw WinAPIException(GetLastError(), _T("WriteFile to stdout"));
+				}
+				remainBytes -= nBytesRead;
+			}
+
+		}
+
+	}
 }
 
 /*
@@ -96,50 +148,25 @@ static void StdInRedirector(HWND parent_hwnd) {
  * stdout redirects serial (read op) to stdout.
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
+	HWND parent_hwnd = reinterpret_cast<HWND>(lpParameter);
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	char buf[buf_sz] = { 0 };
-	DWORD nBytesRead = 0;
 
 	while (!terminated) {
-		ResetEvent(serialReadOverlapped.hEvent);
-		DWORD event_mask = 0;
-		if (!WaitCommEvent(hSerial, &event_mask, &serialReadOverlapped)) {
-			if (GetLastError() == ERROR_IO_PENDING) {
-				if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, TRUE)) {
-					return -1;
-				}
-			}
-		}
+		try {
 
-		if (event_mask & EV_RXCHAR) {
-			DWORD errors;
-			COMSTAT comstat = { 0 };
-			if (!ClearCommError(hSerial, &errors, &comstat)) {
+			if (!ResetEvent(serialReadOverlapped.hEvent)) {
+				throw WinAPIException(GetLastError(), _T("ResetEvent for reading data from serial device"));
+			}
+
+			StdOutRedirectorLoopInner(hStdOut);
+		}
+		catch (WinAPIException& e) {
+			if (!terminated) {
+				MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+				terminated = true;
 				return -1;
 			}
-
-			DWORD remainBytes = comstat.cbInQue;
-			while (remainBytes > 0) {
-
-				if (!ReadFile(hSerial, buf, min(buf_sz, remainBytes), &nBytesRead, &serialReadOverlapped)) {
-					if (GetLastError() == ERROR_IO_PENDING) {
-						if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
-							return -1;
-						}
-					}
-				}
-
-				if (nBytesRead > 0) {
-					DWORD nBytesWritten;
-					WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL);
-					remainBytes -= nBytesRead;
-				}
-
-			}
-
 		}
-
-
 	}
 
 	return 0;
@@ -153,10 +180,10 @@ static HWND GetParentWindow() {
 
 		if (parent == NULL) {
 			TCHAR window_text[MAX_PATH] = { 0 };
-			GetWindowText(current, window_text, MAX_PATH);
+			int result = GetWindowText(current, window_text, MAX_PATH);
 
 			// If window_text is empty, SimpleCom might be run on Windows Terminal (Could not get valid owner window text)
-			return (window_text[0] == 0) ? NULL : current;
+			return ((result == 0) || (window_text[0] == 0)) ? NULL : current;
 		}
 		else {
 			current = parent;
@@ -165,6 +192,73 @@ static HWND GetParentWindow() {
 	}
 
 }
+
+static void InitSerialPort(TString &device, DCB *dcb) {
+	TString title = _T("SimpleCom: ") + device;
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleTitle(title.c_str()), TRUE, __FILE__, __LINE__)
+
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommState(hSerial, dcb), TRUE, __FILE__, __LINE__)
+
+	CALL_WINAPI_WITH_DEBUGLOG(PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR), TRUE, __FILE__, __LINE__)
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommMask(hSerial, EV_RXCHAR), TRUE, __FILE__, __LINE__)
+	CALL_WINAPI_WITH_DEBUGLOG(SetupComm(hSerial, buf_sz, buf_sz), TRUE, __FILE__, __LINE__)
+
+	COMMTIMEOUTS comm_timeouts;
+	CALL_WINAPI_WITH_DEBUGLOG(GetCommTimeouts(hSerial, &comm_timeouts), TRUE, __FILE__, __LINE__)
+	comm_timeouts.ReadIntervalTimeout = 0;
+	comm_timeouts.ReadTotalTimeoutMultiplier = 0;
+	comm_timeouts.ReadTotalTimeoutConstant = 10;
+	comm_timeouts.WriteTotalTimeoutMultiplier = 0;
+	comm_timeouts.WriteTotalTimeoutConstant = 0;
+	CALL_WINAPI_WITH_DEBUGLOG(SetCommTimeouts(hSerial, &comm_timeouts), TRUE, __FILE__, __LINE__)
+}
+
+static void InitConsole(HANDLE *hStdIn, HANDLE *hStdOut) {
+	DWORD mode;
+
+	*hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	if (*hStdIn == INVALID_HANDLE_VALUE) {
+		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
+	}
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(*hStdIn, &mode), TRUE, __FILE__, __LINE__)
+	mode &= ~ENABLE_PROCESSED_INPUT;
+	mode &= ~ENABLE_LINE_INPUT;
+	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(*hStdIn, mode), TRUE, __FILE__, __LINE__)
+
+	*hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (*hStdOut == INVALID_HANDLE_VALUE) {
+		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
+	}
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(*hStdOut, &mode), TRUE, __FILE__, __LINE__);
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(*hStdOut, mode), TRUE, __FILE__, __LINE__);
+}
+
+/*
+ * RAII for HANDLE
+ */
+class HandleHandler {
+private:
+	HANDLE _handle;
+
+public:
+	HandleHandler(HANDLE handle, LPCTSTR error_caption) : _handle(handle) {
+		if (_handle == INVALID_HANDLE_VALUE) {
+			throw WinAPIException(GetLastError(), error_caption);
+		}
+	}
+
+	~HandleHandler() {
+		if (_handle != INVALID_HANDLE_VALUE) {
+			CloseHandle(_handle);
+		}
+	}
+
+	inline HANDLE handle() {
+		return _handle;
+	}
+};
 
 int _tmain(int argc, LPCTSTR argv[])
 {
@@ -182,86 +276,48 @@ int _tmain(int argc, LPCTSTR argv[])
 		else if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
 			return -1;
 		}
-		device = _T("\\\\.\\") + setup.GetPort();
+		device = _T(R"(\\.\)") + setup.GetPort();
 		setup.SaveToDCB(&dcb);
 	}
-	catch (WinAPIException e) {
+	catch (WinAPIException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -1;
 	}
-	catch (SerialSetupException e) {
+	catch (SerialSetupException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -2;
 	}
 
-	// Open serial device
-	hSerial = CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-	if (hSerial == INVALID_HANDLE_VALUE) {
-		WinAPIException e(GetLastError(), NULL); // Use WinAPIException to get error string.
-		MessageBox(parent_hwnd, e.GetErrorText(), _T("Open serial connection"), MB_OK | MB_ICONERROR);
-		return -4;
+	try {
+		// Open serial device
+		HandleHandler hnd(CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), _T("Open serial port"));
+		hSerial = hnd.handle();
+		InitSerialPort(device, &dcb);
+
+		HandleHandler evt(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device"));
+		serialReadOverlapped.hEvent = evt.handle();
+
+		HANDLE hStdIn, hStdOut;
+		InitConsole(&hStdIn, &hStdOut);
+
+		terminated = false;
+
+		// Create stdout redirector
+		HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, parent_hwnd, 0, NULL), _T("CreateThread for StdOutRedirector"));
+		stdoutRedirectorThread = threadHnd.handle();
+
+		// stdin redirector would perform in current thread
+		StdInRedirector(parent_hwnd);
+
+		// stdin redirector should be finished at this point.
+		// It means end of serial communication. So we should terminate stdout redirector.
+		CALL_WINAPI_WITH_DEBUGLOG(CancelIoEx(hSerial, &serialReadOverlapped), TRUE, __FILE__, __LINE__)
+		WaitForSingleObject(stdoutRedirectorThread, INFINITE);
 	}
-
-	TString title = _T("SimpleCom: ") + device;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleTitle(title.c_str()), TRUE)
-
-	CALL_WINAPI_WITH_DEBUGLOG(SetCommState(hSerial, &dcb), TRUE)
-	CALL_WINAPI_WITH_DEBUGLOG(PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR), TRUE)
-	CALL_WINAPI_WITH_DEBUGLOG(SetCommMask(hSerial, EV_RXCHAR), TRUE)
-	CALL_WINAPI_WITH_DEBUGLOG(SetupComm(hSerial, buf_sz, buf_sz), TRUE)
-
-	COMMTIMEOUTS comm_timeouts;
-	CALL_WINAPI_WITH_DEBUGLOG(GetCommTimeouts(hSerial, &comm_timeouts), TRUE)
-	comm_timeouts.ReadIntervalTimeout = 0;
-	comm_timeouts.ReadTotalTimeoutMultiplier = 0;
-	comm_timeouts.ReadTotalTimeoutConstant = 10;
-	comm_timeouts.WriteTotalTimeoutMultiplier = 0;
-	comm_timeouts.WriteTotalTimeoutConstant = 0;
-	CALL_WINAPI_WITH_DEBUGLOG(SetCommTimeouts(hSerial, &comm_timeouts), TRUE)
-
-	serialReadOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (serialReadOverlapped.hEvent == NULL) {
-		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		CloseHandle(hSerial);
-		return -1;
+	catch (WinAPIException& e) {
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		return -3;
 	}
-
-	DWORD mode;
-
-	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdIn, &mode), TRUE)
-	mode &= ~ENABLE_PROCESSED_INPUT;
-	mode &= ~ENABLE_LINE_INPUT;
-	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdIn, mode), TRUE)
-
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE);
-	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE);
-
-	terminated = false;
-
-	// Create stdout redirector
-	stdoutRedirectorThread = CreateThread(NULL, 0, &StdOutRedirector, NULL, 0, NULL);
-	if (stdoutRedirectorThread == NULL) {
-		WinAPIException ex(GetLastError(), _T("SimpleCom"));
-		MessageBox(parent_hwnd, ex.GetErrorText(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		CloseHandle(hSerial);
-		return -2;
-	}
-
-	// stdin redirector would perform in current thread
-	StdInRedirector(parent_hwnd);
-
-	// stdin redirector should be finished at this point.
-	// It means end of serial communication. So we should terminate stdout redirector.
-	CancelIoEx(hSerial, &serialReadOverlapped);
-	WaitForSingleObject(stdoutRedirectorThread, INFINITE);
-
-	CloseHandle(hSerial);
-	CloseHandle(serialReadOverlapped.hEvent);
 
 	return 0;
 }

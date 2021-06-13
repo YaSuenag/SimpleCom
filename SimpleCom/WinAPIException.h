@@ -33,9 +33,12 @@ private:
 	LPTSTR _error_text;
 
 public:
+	explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(const_cast<LPTSTR>(error_text)) {}
 	explicit WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
-	WinAPIException(DWORD error_code, LPCTSTR error_caption);
+	explicit WinAPIException(DWORD error_code, LPCTSTR error_caption);
 	virtual ~WinAPIException();
+
+	WinAPIException& operator = (WinAPIException& rvalue) = delete;
 
 	inline DWORD GetErrorCode() const noexcept {
 		return _error_code;
