@@ -25,7 +25,7 @@
 
 static HANDLE stdoutRedirectorThread;
 
-static HANDLE hSerial;
+static HANDLE hSerial, hStdIn, hStdOut;
 static OVERLAPPED serialReadOverlapped = { 0 };
 static volatile bool terminated;
 
@@ -62,7 +62,6 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter &
  * stdin redirects stdin to serial (write op).
  */
 static void StdInRedirector(HWND parent_hwnd) {
-	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	INPUT_RECORD inputs[buf_sz];
 	DWORD n_read;
 
@@ -149,7 +148,6 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HWND parent_hwnd = reinterpret_cast<HWND>(lpParameter);
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	while (!terminated) {
 		try {
@@ -213,25 +211,25 @@ static void InitSerialPort(TString &device, DCB *dcb) {
 	CALL_WINAPI_WITH_DEBUGLOG(SetCommTimeouts(hSerial, &comm_timeouts), TRUE, __FILE__, __LINE__)
 }
 
-static void InitConsole(HANDLE *hStdIn, HANDLE *hStdOut) {
+static void InitConsole() {
 	DWORD mode;
 
-	*hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	if (*hStdIn == INVALID_HANDLE_VALUE) {
+	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	if (hStdIn == INVALID_HANDLE_VALUE) {
 		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
 	}
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(*hStdIn, &mode), TRUE, __FILE__, __LINE__)
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdIn, &mode), TRUE, __FILE__, __LINE__)
 	mode &= ~ENABLE_PROCESSED_INPUT;
 	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(*hStdIn, mode), TRUE, __FILE__, __LINE__)
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdIn, mode), TRUE, __FILE__, __LINE__)
 
-	*hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (*hStdOut == INVALID_HANDLE_VALUE) {
+	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hStdOut == INVALID_HANDLE_VALUE) {
 		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
 	}
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(*hStdOut, &mode), TRUE, __FILE__, __LINE__);
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE, __FILE__, __LINE__);
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(*hStdOut, mode), TRUE, __FILE__, __LINE__);
+	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
 }
 
 /*
@@ -296,8 +294,7 @@ int _tmain(int argc, LPCTSTR argv[])
 		HandleHandler evt(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device"));
 		serialReadOverlapped.hEvent = evt.handle();
 
-		HANDLE hStdIn, hStdOut;
-		InitConsole(&hStdIn, &hStdOut);
+		InitConsole();
 
 		terminated = false;
 
