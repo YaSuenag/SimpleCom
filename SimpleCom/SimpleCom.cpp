@@ -37,7 +37,7 @@ static constexpr int buf_sz = 256;
  * If F1 key is found, all of send_data would be flushed and would set true to terminated flag.
  * Return the index of send_data to write next one.
  */
-static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter &writer, const HWND parent_hwnd) {
+static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialPortWriter &writer, const HWND parent_hwnd) {
 
 	if (keyevent.wVirtualKeyCode == VK_F1) {
 		// Write all keys in the buffer before F1
@@ -65,13 +65,13 @@ static void StdInRedirector(HWND parent_hwnd) {
 	INPUT_RECORD inputs[buf_sz];
 	DWORD n_read;
 
-	SerialPortWriter writer(hSerial, buf_sz);
+	SimpleCom::SerialPortWriter writer(hSerial, buf_sz);
 
 	try {
 		while (!terminated) {
 
 			if (!ReadConsoleInput(hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
-				throw WinAPIException(GetLastError(), _T("SimpleCom"));
+				throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
 			}
 
 			for (DWORD idx = 0; idx < n_read; idx++) {
@@ -83,7 +83,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 			writer.WriteAsync();
 		}
 	}
-	catch (WinAPIException& e) {
+	catch (SimpleCom::WinAPIException& e) {
 		if (!terminated) {
 			MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
@@ -98,11 +98,11 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
 		if (GetLastError() == ERROR_IO_PENDING) {
 			DWORD unused = 0;
 			if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &unused, TRUE)) {
-				throw WinAPIException(GetLastError(), _T("GetOverlappedResult for WaitCommEvent"));
+				throw SimpleCom::WinAPIException(GetLastError(), _T("GetOverlappedResult for WaitCommEvent"));
 			}
 		}
 		else {
-			throw WinAPIException(GetLastError(), _T("WaitCommEvent"));
+			throw SimpleCom::WinAPIException(GetLastError(), _T("WaitCommEvent"));
 		}
 	}
 
@@ -110,7 +110,7 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
 		DWORD errors;
 		COMSTAT comstat = { 0 };
 		if (!ClearCommError(hSerial, &errors, &comstat)) {
-			throw WinAPIException(GetLastError(), _T("ClearCommError"));
+			throw SimpleCom::WinAPIException(GetLastError(), _T("ClearCommError"));
 		}
 
 		char buf[buf_sz] = { 0 };
@@ -121,18 +121,18 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
 			if (!ReadFile(hSerial, buf, min(buf_sz, remainBytes), &nBytesRead, &serialReadOverlapped)) {
 				if (GetLastError() == ERROR_IO_PENDING) {
 					if (!GetOverlappedResult(hSerial, &serialReadOverlapped, &nBytesRead, FALSE)) {
-						throw WinAPIException(GetLastError(), _T("GetOverlappedResult for ReadFile"));
+						throw SimpleCom::WinAPIException(GetLastError(), _T("GetOverlappedResult for ReadFile"));
 					}
 				}
 				else {
-					throw WinAPIException(GetLastError(), _T("ReadFile from serial device"));
+					throw SimpleCom::WinAPIException(GetLastError(), _T("ReadFile from serial device"));
 				}
 			}
 
 			if (nBytesRead > 0) {
 				DWORD nBytesWritten;
 				if (!WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL)) {
-					throw WinAPIException(GetLastError(), _T("WriteFile to stdout"));
+					throw SimpleCom::WinAPIException(GetLastError(), _T("WriteFile to stdout"));
 				}
 				remainBytes -= nBytesRead;
 			}
@@ -153,12 +153,12 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 		try {
 
 			if (!ResetEvent(serialReadOverlapped.hEvent)) {
-				throw WinAPIException(GetLastError(), _T("ResetEvent for reading data from serial device"));
+				throw SimpleCom::WinAPIException(GetLastError(), _T("ResetEvent for reading data from serial device"));
 			}
 
 			StdOutRedirectorLoopInner(hStdOut);
 		}
-		catch (WinAPIException& e) {
+		catch (SimpleCom::WinAPIException& e) {
 			if (!terminated) {
 				MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 				terminated = true;
@@ -191,8 +191,8 @@ static HWND GetParentWindow() {
 
 }
 
-static void InitSerialPort(TString &device, DCB *dcb) {
-	TString title = _T("SimpleCom: ") + device;
+static void InitSerialPort(SimpleCom::TString &device, DCB *dcb) {
+	SimpleCom::TString title = _T("SimpleCom: ") + device;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleTitle(title.c_str()), TRUE, __FILE__, __LINE__)
 
 	CALL_WINAPI_WITH_DEBUGLOG(SetCommState(hSerial, dcb), TRUE, __FILE__, __LINE__)
@@ -216,7 +216,7 @@ static void InitConsole() {
 
 	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	if (hStdIn == INVALID_HANDLE_VALUE) {
-		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
 	}
 	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdIn, &mode), TRUE, __FILE__, __LINE__)
 	mode &= ~ENABLE_PROCESSED_INPUT;
@@ -225,7 +225,7 @@ static void InitConsole() {
 
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hStdOut == INVALID_HANDLE_VALUE) {
-		throw WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
 	}
 	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE, __FILE__, __LINE__);
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
@@ -242,7 +242,7 @@ private:
 public:
 	HandleHandler(HANDLE handle, LPCTSTR error_caption) : _handle(handle) {
 		if (_handle == INVALID_HANDLE_VALUE) {
-			throw WinAPIException(GetLastError(), error_caption);
+			throw SimpleCom::WinAPIException(GetLastError(), error_caption);
 		}
 	}
 
@@ -260,12 +260,12 @@ public:
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
-	TString device;
+	SimpleCom::TString device;
 	HWND parent_hwnd = GetParentWindow();
 
 	// Serial port configuration
 	try {
-		SerialSetup setup;
+		SimpleCom::SerialSetup setup;
 		if (argc > 1) {
 			// command line mode
 			setup.ParseArguments(argc, argv);
@@ -276,11 +276,11 @@ int _tmain(int argc, LPCTSTR argv[])
 		device = _T(R"(\\.\)") + setup.GetPort();
 		setup.SaveToDCB(&dcb);
 	}
-	catch (WinAPIException& e) {
+	catch (SimpleCom::WinAPIException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -1;
 	}
-	catch (SerialSetupException& e) {
+	catch (SimpleCom::SerialSetupException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -2;
 	}
@@ -310,7 +310,7 @@ int _tmain(int argc, LPCTSTR argv[])
 		CALL_WINAPI_WITH_DEBUGLOG(CancelIoEx(hSerial, &serialReadOverlapped), TRUE, __FILE__, __LINE__)
 		WaitForSingleObject(stdoutRedirectorThread, INFINITE);
 	}
-	catch (WinAPIException& e) {
+	catch (SimpleCom::WinAPIException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -3;
 	}

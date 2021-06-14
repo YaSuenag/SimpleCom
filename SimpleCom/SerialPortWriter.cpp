@@ -21,7 +21,7 @@
 #include "SerialPortWriter.h"
 #include "WinAPIException.h"
 
-SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
+SimpleCom::SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
 {
 	_handle = handle;
 	_overlapped = { 0 };
@@ -36,7 +36,7 @@ SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
 	_buf_idx = 0;
 }
 
-SerialPortWriter::~SerialPortWriter()
+SimpleCom::SerialPortWriter::~SerialPortWriter()
 {
 	WriteAsync();
 	WaitForSingleObject(_overlapped.hEvent, INFINITE);
@@ -44,7 +44,7 @@ SerialPortWriter::~SerialPortWriter()
 	delete[] _buf;
 }
 
-void SerialPortWriter::WriteAsync()
+void SimpleCom::SerialPortWriter::WriteAsync()
 {
 	if (_buf_idx <= 0) {
 		// No data to write
@@ -65,7 +65,7 @@ void SerialPortWriter::WriteAsync()
 	_buf_idx = 0;
 }
 
-void SerialPortWriter::Put(const char c) {
+void SimpleCom::SerialPortWriter::Put(const char c) {
 	// Wait if async writing is performing...
 	WaitForSingleObject(_overlapped.hEvent, INFINITE);
 

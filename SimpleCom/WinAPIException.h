@@ -20,36 +20,40 @@
 
 #include "stdafx.h"
 
-/*
- * Exception class for Windows API error.
- * This class can hold error code from GetLastError() and caption string for its error.
- * Also it can provides error string from FormatMessage(). Its pointer would be managed by WinAPIException.
- */
-class WinAPIException
-{
-private:
-	DWORD _error_code;
-	LPCTSTR _error_caption;
-	LPTSTR _error_text;
+namespace SimpleCom {
 
-public:
-	explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(const_cast<LPTSTR>(error_text)) {}
-	explicit WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
-	explicit WinAPIException(DWORD error_code, LPCTSTR error_caption);
-	virtual ~WinAPIException();
+	/*
+	 * Exception class for Windows API error.
+	 * This class can hold error code from GetLastError() and caption string for its error.
+	 * Also it can provides error string from FormatMessage(). Its pointer would be managed by WinAPIException.
+	 */
+	class WinAPIException
+	{
+	private:
+		DWORD _error_code;
+		LPCTSTR _error_caption;
+		LPTSTR _error_text;
 
-	WinAPIException& operator = (WinAPIException& rvalue) = delete;
+	public:
+		explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(const_cast<LPTSTR>(error_text)) {}
+		explicit WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
+		explicit WinAPIException(DWORD error_code, LPCTSTR error_caption);
+		virtual ~WinAPIException();
 
-	inline DWORD GetErrorCode() const noexcept {
-		return _error_code;
-	}
+		WinAPIException& operator = (WinAPIException& rvalue) = delete;
 
-	inline LPCTSTR GetErrorCaption() const noexcept {
-		return _error_caption;
-	}
+		inline DWORD GetErrorCode() const noexcept {
+			return _error_code;
+		}
 
-	inline LPCTSTR GetErrorText() const noexcept {
-		return _error_text;
-	}
-};
+		inline LPCTSTR GetErrorCaption() const noexcept {
+			return _error_caption;
+		}
+
+		inline LPCTSTR GetErrorText() const noexcept {
+			return _error_text;
+		}
+	};
+
+}
 

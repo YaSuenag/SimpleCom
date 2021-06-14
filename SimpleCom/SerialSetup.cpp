@@ -31,39 +31,39 @@
 
 
 // Enum setup for parity
-static constexpr Parity NO_PARITY{ NOPARITY, _T("none") };
-static constexpr Parity ODD_PARITY{ ODDPARITY, _T("odd") };
-static constexpr Parity EVEN_PARITY{ EVENPARITY, _T("even") };
-static constexpr Parity MARK_PARITY{ MARKPARITY, _T("mark") };
-static constexpr Parity SPACE_PARITY{ SPACEPARITY, _T("space") };
-static constexpr Parity parities[] = { NO_PARITY, ODD_PARITY, EVEN_PARITY, MARK_PARITY, SPACE_PARITY };
+static constexpr SimpleCom::Parity NO_PARITY{ NOPARITY, _T("none") };
+static constexpr SimpleCom::Parity ODD_PARITY{ ODDPARITY, _T("odd") };
+static constexpr SimpleCom::Parity EVEN_PARITY{ EVENPARITY, _T("even") };
+static constexpr SimpleCom::Parity MARK_PARITY{ MARKPARITY, _T("mark") };
+static constexpr SimpleCom::Parity SPACE_PARITY{ SPACEPARITY, _T("space") };
+static constexpr SimpleCom::Parity parities[] = { NO_PARITY, ODD_PARITY, EVEN_PARITY, MARK_PARITY, SPACE_PARITY };
 
 // Enum setup for flow control
-static constexpr FlowControl NONE{ __COUNTER__, _T("none") };
-static constexpr FlowControl HARDWARE{ __COUNTER__, _T("hardware") };
-static constexpr FlowControl SOFTWARE{ __COUNTER__, _T("software") };
-static constexpr FlowControl flowctrls[] = { NONE, HARDWARE, SOFTWARE };
+static constexpr SimpleCom::FlowControl NONE{ __COUNTER__, _T("none") };
+static constexpr SimpleCom::FlowControl HARDWARE{ __COUNTER__, _T("hardware") };
+static constexpr SimpleCom::FlowControl SOFTWARE{ __COUNTER__, _T("software") };
+static constexpr SimpleCom::FlowControl flowctrls[] = { NONE, HARDWARE, SOFTWARE };
 
 // Enum setup for stop bits
-static constexpr StopBits ONE{ ONESTOPBIT, _T("1") };
-static constexpr StopBits ONE5{ ONE5STOPBITS, _T("1.5") };
-static constexpr StopBits TWO{ TWOSTOPBITS, _T("2") };
-static constexpr StopBits stopbits[] = { ONE, ONE5, TWO };
+static constexpr SimpleCom::StopBits ONE{ ONESTOPBIT, _T("1") };
+static constexpr SimpleCom::StopBits ONE5{ ONE5STOPBITS, _T("1.5") };
+static constexpr SimpleCom::StopBits TWO{ TWOSTOPBITS, _T("2") };
+static constexpr SimpleCom::StopBits stopbits[] = { ONE, ONE5, TWO };
 
 
-SerialSetup::SerialSetup() : _port(),
-							 _baud_rate(115200),
-							 _byte_size(8),
-							 _parity(const_cast<Parity&>(parities[0])), // NO__PARITY
-							 _stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
-							 _flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
-							 _devices()
+SimpleCom::SerialSetup::SerialSetup() : _port(),
+										_baud_rate(115200),
+										_byte_size(8),
+										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
+										_stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
+										_flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
+										_devices()
 {
 	initialize();
 }
 
 
-SerialSetup::~SerialSetup()
+SimpleCom::SerialSetup::~SerialSetup()
 {
 	// Do nothing
 }
@@ -80,7 +80,7 @@ public:
 		LSTATUS status = RegOpenKeyEx(hOpenKey, lpSubKey, ulOptions, samDesired, &hKey);
 		if (status != ERROR_SUCCESS) {
 			hKey = static_cast<HKEY>(INVALID_HANDLE_VALUE);
-			throw WinAPIException(GetLastError(), lpSubKey);
+			throw SimpleCom::WinAPIException(GetLastError(), lpSubKey);
 		}
 	}
 
@@ -95,7 +95,7 @@ public:
 	}
 };
 
-void SerialSetup::initialize() {
+void SimpleCom::SerialSetup::initialize() {
 	// Generates device map of serial interface name and device name
 	// from HKLM\HARDWARE\DEVICEMAP\SERIALCOMM.
 
@@ -131,25 +131,25 @@ void SerialSetup::initialize() {
 	delete[] DeviceName;
 }
 
-static void AddStringToComboBox(HWND hCombo, TString str) {
+static void AddStringToComboBox(HWND hCombo, SimpleCom::TString str) {
 	LRESULT result = SendMessage(hCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
 	if (result == CB_ERR) {
-		throw WinAPIException(_T("CB_ERR"), _T("AddStringToComboBox"));
+		throw SimpleCom::WinAPIException(_T("CB_ERR"), _T("AddStringToComboBox"));
 	}
 	else if (result == CB_ERRSPACE) {
-		throw WinAPIException(_T("CB_ERRSPACE"), _T("AddStringToComboBox"));
+		throw SimpleCom::WinAPIException(_T("CB_ERRSPACE"), _T("AddStringToComboBox"));
 	}
 }
 
-static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
+static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	// Initialize serial configuration.
 	// Initial value is for serial console of Raspberry Pi.
 
-	TString text_str;
+	SimpleCom::TString text_str;
 
 	HWND hComboSerialDevice = GetDlgItem(hDlg, IDC_SERIAL_DEVICE);
 	if (hComboSerialDevice == NULL) {
-		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
 	}
 	for (auto itr = setup->GetDevices().begin(); itr != setup->GetDevices().end(); itr++) {
 		text_str = itr->first + _T(": ") + itr->second;
@@ -159,17 +159,17 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
 
 	text_str = TO_STRING(setup->GetBaudRate());
 	if (!SetDlgItemText(hDlg, IDC_BAUD_RATE, text_str.c_str())) {
-		throw WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BAUD_RATE)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BAUD_RATE)"));
 	}
 
 	text_str = TO_STRING(setup->GetByteSize());
 	if (!SetDlgItemText(hDlg, IDC_BYTE_SIZE, text_str.c_str())) {
-		throw WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BYTE_SIZE)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_BYTE_SIZE)"));
 	}
 
 	HWND hComboParity = GetDlgItem(hDlg, IDC_PARITY);
 	if (hComboParity == NULL) {
-		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_PARITY)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_PARITY)"));
 	}
 	for (auto parity : parities) {
 		AddStringToComboBox(hComboParity, parity.tstr());
@@ -179,7 +179,7 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
 
 	HWND hComboStopBits = GetDlgItem(hDlg, IDC_STOP_BITS);
 	if (hComboStopBits == NULL) {
-		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STOP_BITS)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STOP_BITS)"));
 	}
 	for (auto stopbit : stopbits) {
 		AddStringToComboBox(hComboStopBits, stopbit.tstr());
@@ -188,7 +188,7 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
 
 	HWND hComboFlowCtl = GetDlgItem(hDlg, IDC_FLOW_CTL);
 	if (hComboFlowCtl == NULL) {
-		throw WinAPIException(GetLastError(), _T("GetDlgItem(IDC_FLOW_CTL)"));
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_FLOW_CTL)"));
 	}
 	for (auto flowctl : flowctrls) {
 		AddStringToComboBox(hComboFlowCtl, flowctl.tstr());
@@ -200,7 +200,7 @@ static void InitializeDialog(HWND hDlg, SerialSetup *setup) {
  * Retrieves serial configuration from dialog.
  * Return true if all configuration are retrieved and they are valid.
  */
-static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
+static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup) {
 	int selected_idx;
 
 	// Iterating order of std::map is guaranteed.
@@ -208,7 +208,7 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 	// https://stackoverflow.com/questions/7648756/is-the-order-of-iterating-through-stdmap-known-and-guaranteed-by-the-standard
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_SERIAL_DEVICE), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
-		throw WinAPIException(_T("No item is selected"), _T("IDC_SERIAL_DEVICE"));
+		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_SERIAL_DEVICE"));
 	}
 	auto target = setup->GetDevices().begin();
 	for (int i = 0; i < selected_idx; i++, target++) {
@@ -233,21 +233,21 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_PARITY), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
-		throw WinAPIException(_T("No item is selected"), _T("IDC_PARITY"));
+		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_PARITY"));
 	}
-	setup->SetParity(const_cast<Parity &>(parities[selected_idx]));
+	setup->SetParity(const_cast<SimpleCom::Parity &>(parities[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_STOP_BITS), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
-		throw WinAPIException(_T("No item is selected"), _T("IDC_STOP_BITS"));
+		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_STOP_BITS"));
 	}
-	setup->SetStopBits(const_cast<StopBits&>(stopbits[selected_idx]));
+	setup->SetStopBits(const_cast<SimpleCom::StopBits&>(stopbits[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_FLOW_CTL), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
-		throw WinAPIException(_T("No item is selected"), _T("IDC_FLOW_CTL"));
+		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_FLOW_CTL"));
 	}
-	setup->SetFlowControl(const_cast<FlowControl&>(flowctrls[selected_idx]));
+	setup->SetFlowControl(const_cast<SimpleCom::FlowControl&>(flowctrls[selected_idx]));
 
 	return true;
 }
@@ -256,12 +256,12 @@ static bool GetConfigurationFromDialog(HWND hDlg, SerialSetup* setup) {
  * Configuration dialog box procedure
  */
 static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
-	static SerialSetup* setup;
+	static SimpleCom::SerialSetup* setup;
 	
 	try {
 		switch (msg) {
 		case WM_INITDIALOG:
-			setup = reinterpret_cast<SerialSetup*>(lParam);
+			setup = reinterpret_cast<SimpleCom::SerialSetup*>(lParam);
 			InitializeDialog(hDlg, setup);
 			return TRUE;
 
@@ -282,7 +282,7 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 			return TRUE;
 		}
 	}
-	catch (WinAPIException& e) {
+	catch (SimpleCom::WinAPIException& e) {
 		MessageBox(hDlg, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
@@ -294,14 +294,14 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
  * Show serial configuration dialog.
  * Return true if the dialog is finished with "connect" button (IDCONNECT).
  */
-bool SerialSetup::ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept {
+bool SimpleCom::SerialSetup::ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept {
 	return IDCONNECT == DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_SETUP), hWnd, &SettingDlgProc, reinterpret_cast<LPARAM>(this));
 }
 
 /**
  * Parse command line arguments, and set them to this instance.
  */
-void SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
+void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 	int i = 1;
 	for (; i < argc; i++) {
 		if ((_tcsncmp(_T("--"), argv[i], 2) == 0) && ((i + 1) == argc)) {
@@ -411,7 +411,7 @@ void SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 /*
  * Save configuration to DCB
  */
-void SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
+void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 	ZeroMemory(dcb, sizeof(DCB));
 	dcb->DCBlength = sizeof(DCB);
 

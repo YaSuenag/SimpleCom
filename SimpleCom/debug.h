@@ -28,11 +28,19 @@
 
 #define CALL_WINAPI_WITH_DEBUGLOG(func_call, expected, file, line)              \
   if (func_call != expected) {                                                  \
-    WinAPIException e(GetLastError(), nullptr);                                 \
+    SimpleCom::WinAPIException e(GetLastError(), nullptr);                      \
     SS_CLASS ss;                                                                \
     ss << file << _T(":") << line << _T(": ") << e.GetErrorText() << std::endl; \
-    log_debug(ss.str().c_str());                                                \
+    SimpleCom::debug::log_debug(ss.str().c_str());                              \
   }
 
- // Print debug message to the console if the binary is debug build
-void log_debug(LPCTSTR message);
+namespace SimpleCom {
+
+    namespace debug {
+
+        // Print debug message to the console if the binary is debug build
+        void log_debug(LPCTSTR message);
+
+    }
+
+}

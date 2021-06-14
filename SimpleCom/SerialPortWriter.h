@@ -20,24 +20,27 @@
 
 #include "stdafx.h"
 
-/*
- * Utility class for wrinting chars to serial port asynchronously.
- * THIS CLASS IS NOT THREAD SAFETY !!!
- */
-class SerialPortWriter
-{
-private:
-	HANDLE _handle;
-	OVERLAPPED _overlapped;
-	DWORD _buf_sz;
-	char* _buf;
-	DWORD _buf_idx;
+namespace SimpleCom {
 
-public:
-	SerialPortWriter(const HANDLE handle, DWORD buf_sz);
-	virtual ~SerialPortWriter();
+	/*
+	 * Utility class for wrinting chars to serial port asynchronously.
+	 * THIS CLASS IS NOT THREAD SAFETY !!!
+	 */
+	class SerialPortWriter
+	{
+	private:
+		HANDLE _handle;
+		OVERLAPPED _overlapped;
+		DWORD _buf_sz;
+		char* _buf;
+		DWORD _buf_idx;
 
-	void Put(const char c);
-	void WriteAsync();
-};
+	public:
+		SerialPortWriter(const HANDLE handle, DWORD buf_sz);
+		virtual ~SerialPortWriter();
 
+		void Put(const char c);
+		void WriteAsync();
+	};
+
+}
