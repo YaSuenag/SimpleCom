@@ -21,7 +21,7 @@
 
 #include "debug.h"
 
-void SimpleCom::debug::log_debug(LPCTSTR message) {
+void SimpleCom::debug::log(LPCTSTR message) {
 #ifdef _DEBUG
 #ifdef _UNICODE
 	std::wcerr.imbue(std::locale(""));

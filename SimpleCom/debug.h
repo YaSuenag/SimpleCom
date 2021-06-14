@@ -31,7 +31,7 @@
     SimpleCom::WinAPIException e(GetLastError(), nullptr);                      \
     SS_CLASS ss;                                                                \
     ss << file << _T(":") << line << _T(": ") << e.GetErrorText() << std::endl; \
-    SimpleCom::debug::log_debug(ss.str().c_str());                              \
+    SimpleCom::debug::log(ss.str().c_str());                                    \
   }
 
 namespace SimpleCom {
@@ -39,7 +39,7 @@ namespace SimpleCom {
     namespace debug {
 
         // Print debug message to the console if the binary is debug build
-        void log_debug(LPCTSTR message);
+        void log(LPCTSTR message);
 
     }
 

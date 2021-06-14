@@ -40,7 +40,7 @@ SimpleCom::WinAPIException::WinAPIException(DWORD error_code, LPCTSTR error_capt
 		std::stringstream msg;
 #endif
 		msg << _T("Error occurred in FormatMessage (") << std::showbase << std::hex << errcode << _T(")");
-		debug::log_debug(msg.str().c_str());
+		debug::log(msg.str().c_str());
 	}
 }
 
