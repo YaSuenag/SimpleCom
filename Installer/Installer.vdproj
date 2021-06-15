@@ -15,12 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_0A0C9F61E94DE5A8155031222CDE9264"
-        "OwnerKey" = "8:_7E1119B957124B09883E727B6817AD17"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_4E1D102BF9964083898B379307C77C46"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -41,12 +35,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_7E1119B957124B09883E727B6817AD17"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_0A0C9F61E94DE5A8155031222CDE9264"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -89,7 +77,7 @@
         "DisplayName" = "8:Release"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:TRUE"
-        "OutputFilename" = "8:SimpleComInstaller.msi"
+        "OutputFilename" = "8:SimpleComInstaller-1.0.0.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -189,37 +177,6 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0A0C9F61E94DE5A8155031222CDE9264"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                "ScatterAssemblies"
-                {
-                    "_0A0C9F61E94DE5A8155031222CDE9264"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_94D5B72B21EF48D697B10AD74417285E"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4E1D102BF9964083898B379307C77C46"
             {
             "SourcePath" = "8:..\\README.md"
@@ -307,15 +264,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:SimpleCom"
-        "ProductCode" = "8:{C3DBFF02-E477-4F05-BE5F-A35D7399DE97}"
-        "PackageCode" = "8:{497AF46E-7240-4985-BF88-1EFDE8B06108}"
+        "ProductCode" = "8:{1D6D689B-A25B-4F78-A7F8-B2604E7E662F}"
+        "PackageCode" = "8:{DC29C4CC-C968-466C-AB60-429D5A1E92C8}"
         "UpgradeCode" = "8:{F33BE402-825E-46C8-8799-EF7E3AE9C357}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:0.1.3"
+        "ProductVersion" = "8:1.0.0"
         "Manufacturer" = "8:YaSuenag"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://github.com/YaSuenag/SimpleCom/issues"

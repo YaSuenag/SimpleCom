@@ -156,7 +156,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>powershell -ExecutionPolicy Unrestricted -File $(SolutionDir)zip-packaging.ps1 0.1.3 $(SolutionDir)</Command>
+      <Command>powershell -ExecutionPolicy Unrestricted -File $(SolutionDir)zip-packaging.ps1 1.0.0 $(SolutionDir)</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Make distribution archive after release build</Message>
