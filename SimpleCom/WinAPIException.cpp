@@ -34,11 +34,7 @@ SimpleCom::WinAPIException::WinAPIException(DWORD error_code, LPCTSTR error_capt
 		_sntprintf_s(fallback_error_text, sizeof(fallback_error_text) / sizeof(TCHAR), _T("Error occured (%#x)"), _error_code);
 		_error_text = fallback_error_text;
 
-#ifdef _UNICODE
-		std::wstringstream msg;
-#else
-		std::stringstream msg;
-#endif
+		TStringStream msg;
 		msg << _T("Error occurred in FormatMessage (") << std::showbase << std::hex << errcode << _T(")");
 		debug::log(msg.str().c_str());
 	}

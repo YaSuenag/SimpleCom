@@ -17,3 +17,13 @@
 #include <regex>
 #include <sstream>
 #include <string>
+
+#ifdef _UNICODE
+typedef std::wstring TString;
+typedef std::wstringstream TStringStream;
+typedef std::wregex TRegex;
+#else
+typedef std::string TString;
+typedef std::stringstream TStringStream;
+typedef std::regex TRegex;
+#endif

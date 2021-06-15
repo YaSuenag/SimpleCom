@@ -42,12 +42,6 @@ namespace SimpleCom {
 		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 	};
 
-#ifdef  UNICODE
-	typedef std::wstring TString;
-#else   /* UNICODE */
-	typedef std::string TString;
-#endif /* UNICODE */
-
 	typedef std::map<TString, TString> TDeviceMap;
 
 	/*

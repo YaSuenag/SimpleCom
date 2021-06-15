@@ -131,7 +131,7 @@ void SimpleCom::SerialSetup::initialize() {
 	delete[] DeviceName;
 }
 
-static void AddStringToComboBox(HWND hCombo, SimpleCom::TString str) {
+static void AddStringToComboBox(HWND hCombo, TString str) {
 	LRESULT result = SendMessage(hCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
 	if (result == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("CB_ERR"), _T("AddStringToComboBox"));
@@ -145,7 +145,7 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	// Initialize serial configuration.
 	// Initial value is for serial console of Raspberry Pi.
 
-	SimpleCom::TString text_str;
+	TString text_str;
 
 	HWND hComboSerialDevice = GetDlgItem(hDlg, IDC_SERIAL_DEVICE);
 	if (hComboSerialDevice == NULL) {
@@ -386,11 +386,7 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 			}
 		}
 		else {
-#ifdef _UNICODE
-			std::wregex re(_T("^COM\\d+$"));
-#else
-			std::regex re("^COM\\d+$");
-#endif
+			TRegex re(_T("^COM\\d+$"));
 			if (std::regex_match(argv[i], re)) {
 				SetPort(argv[i]);
 			}

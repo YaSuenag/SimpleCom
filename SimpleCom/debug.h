@@ -20,16 +20,10 @@
 
 #include "stdafx.h"
 
-#ifdef _UNICODE
-#define SS_CLASS std::wstringstream
-#else
-#define SS_CLASS std::stringstream
-#endif
-
 #define CALL_WINAPI_WITH_DEBUGLOG(func_call, expected, file, line)              \
   if (func_call != expected) {                                                  \
     SimpleCom::WinAPIException e(GetLastError(), nullptr);                      \
-    SS_CLASS ss;                                                                \
+    TStringStream ss;                                                           \
     ss << file << _T(":") << line << _T(": ") << e.GetErrorText() << std::endl; \
     SimpleCom::debug::log(ss.str().c_str());                                    \
   }

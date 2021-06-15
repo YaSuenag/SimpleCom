@@ -191,8 +191,8 @@ static HWND GetParentWindow() {
 
 }
 
-static void InitSerialPort(SimpleCom::TString &device, DCB *dcb) {
-	SimpleCom::TString title = _T("SimpleCom: ") + device;
+static void InitSerialPort(TString &device, DCB *dcb) {
+	TString title = _T("SimpleCom: ") + device;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleTitle(title.c_str()), TRUE, __FILE__, __LINE__)
 
 	CALL_WINAPI_WITH_DEBUGLOG(SetCommState(hSerial, dcb), TRUE, __FILE__, __LINE__)
@@ -260,7 +260,7 @@ public:
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
-	SimpleCom::TString device;
+	TString device;
 	HWND parent_hwnd = GetParentWindow();
 
 	// Serial port configuration
