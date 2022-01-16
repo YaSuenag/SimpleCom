@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2022, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@ static HANDLE stdoutRedirectorThread;
 
 static HANDLE hSerial, hStdIn, hStdOut;
 static OVERLAPPED serialReadOverlapped = { 0 };
-static volatile bool terminated;
+static std::atomic_bool terminated(false);
 
 static constexpr int buf_sz = 256;
 
@@ -44,7 +44,7 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialP
 		writer.WriteAsync();
 
 		if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-			terminated = true;
+			terminated.store(true, std::memory_order_release);
 			return;
 		}
 	}
@@ -68,7 +68,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 	SimpleCom::SerialPortWriter writer(hSerial, buf_sz);
 
 	try {
-		while (!terminated) {
+		while (!terminated.load(std::memory_order_acquire)) {
 
 			if (!ReadConsoleInput(hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
 				throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
@@ -84,12 +84,14 @@ static void StdInRedirector(HWND parent_hwnd) {
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		if (!terminated) {
+		if (!terminated.load(std::memory_order_acquire)) {
+			// Set terminated flag to true before MessageBox is shown
+			// because other threads should be terminated immediately.
+			terminated.store(true, std::memory_order_release);
 			MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
 	}
 
-	terminated = true;
 }
 
 static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
@@ -149,7 +151,7 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HWND parent_hwnd = reinterpret_cast<HWND>(lpParameter);
 
-	while (!terminated) {
+	while (!terminated.load(std::memory_order_acquire)) {
 		try {
 
 			if (!ResetEvent(serialReadOverlapped.hEvent)) {
@@ -159,9 +161,9 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 			StdOutRedirectorLoopInner(hStdOut);
 		}
 		catch (SimpleCom::WinAPIException& e) {
-			if (!terminated) {
+			if (!terminated.load(std::memory_order_acquire)) {
+				terminated.store(true, std::memory_order_release);
 				MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-				terminated = true;
 				return -1;
 			}
 		}
@@ -296,7 +298,7 @@ int _tmain(int argc, LPCTSTR argv[])
 
 		InitConsole();
 
-		terminated = false;
+		terminated.store(false, std::memory_order_release);
 
 		// Create stdout redirector
 		HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, parent_hwnd, 0, NULL), _T("CreateThread for StdOutRedirector"));
