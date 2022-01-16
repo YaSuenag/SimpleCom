@@ -84,6 +84,8 @@ static void StdInRedirector(HWND parent_hwnd) {
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
+		writer.Shutdown();
+
 		if (!terminated.load(std::memory_order_acquire)) {
 			// Set terminated flag to true before MessageBox is shown
 			// because other threads should be terminated immediately.

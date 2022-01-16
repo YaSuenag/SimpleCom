@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Yasumasa Suenaga
+ * Copyright (C) 2021, 2022, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,6 +34,7 @@ namespace SimpleCom {
 		DWORD _buf_sz;
 		char* _buf;
 		DWORD _buf_idx;
+		bool _shutdown;
 
 	public:
 		SerialPortWriter(const HANDLE handle, DWORD buf_sz);
@@ -41,6 +42,10 @@ namespace SimpleCom {
 
 		void Put(const char c);
 		void WriteAsync();
+
+		inline void Shutdown() {
+			_shutdown = true;
+		}
 	};
 
 }

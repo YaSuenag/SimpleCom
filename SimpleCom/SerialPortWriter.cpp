@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Yasumasa Suenaga
+ * Copyright (C) 2021, 2022, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,12 +34,15 @@ SimpleCom::SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
 	_buf_sz = buf_sz;
 	_buf = new char[buf_sz];
 	_buf_idx = 0;
+	_shutdown = false;
 }
 
 SimpleCom::SerialPortWriter::~SerialPortWriter()
 {
-	WriteAsync();
-	WaitForSingleObject(_overlapped.hEvent, INFINITE);
+	if (!_shutdown) {
+		WriteAsync();
+		WaitForSingleObject(_overlapped.hEvent, INFINITE);
+	}
 	CloseHandle(_overlapped.hEvent);
 	delete[] _buf;
 }
