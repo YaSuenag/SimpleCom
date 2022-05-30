@@ -1,8 +1,9 @@
 SimpleCom
 ![CodeQL](../../workflows/CodeQL/badge.svg)
+===================
 
 Console app for serial connection.
-===================
+
 # How to use
 
 1. Conenct serial adaptor to your PC
