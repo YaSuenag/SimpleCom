@@ -1,4 +1,5 @@
 SimpleCom
+![CodeQL](../../workflows/CodeQL/badge.svg)
 ===================
 
 Console app for serial connection.
