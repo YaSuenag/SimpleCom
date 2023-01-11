@@ -59,8 +59,8 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - run: |
-      msbuild SimpleCom\SimpleCom.vcxproj -property:Configuration=Debug;Platform=x64
-      msbuild InstallerCustomActions\InstallerCustomActions.csproj -property:Configuration=Debug
+          msbuild SimpleCom\SimpleCom.vcxproj -property:Configuration=Debug;Platform=x64
+          msbuild InstallerCustomActions\InstallerCustomActions.csproj -property:Configuration=Debug
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
