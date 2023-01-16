@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2022, Yasumasa Suenaga
+ * Copyright (C) 2019, 2023, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -96,7 +96,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 
 }
 
-static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
+static void StdOutRedirectorLoopInner(HANDLE hnd) {
 	DWORD event_mask = 0;
 	if (!WaitCommEvent(hSerial, &event_mask, &serialReadOverlapped)) {
 		if (GetLastError() == ERROR_IO_PENDING) {
@@ -135,7 +135,7 @@ static void StdOutRedirectorLoopInner(HANDLE hStdOut) {
 
 			if (nBytesRead > 0) {
 				DWORD nBytesWritten;
-				if (!WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL)) {
+				if (!WriteFile(hnd, buf, nBytesRead, &nBytesWritten, NULL)) {
 					throw SimpleCom::WinAPIException(GetLastError(), _T("WriteFile to stdout"));
 				}
 				remainBytes -= nBytesRead;
