@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2023, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,7 +37,6 @@ namespace SimpleCom {
 		constexpr explicit EnumValue(const int value, LPCTSTR str) noexcept : _value(value), _str(const_cast<LPTSTR>(str)) {};
 
 		constexpr operator int() const noexcept { return _value; };
-		EnumValue& operator = (EnumValue& rvalue) = default;
 		bool operator == (EnumValue& rvalue) { return _value == rvalue._value; };
 
 		inline constexpr LPCTSTR tstr() const noexcept { return _str; };
