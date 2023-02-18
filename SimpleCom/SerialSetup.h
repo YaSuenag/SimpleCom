@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2023, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -58,6 +58,7 @@ namespace SimpleCom {
 		StopBits    _stop_bits;
 		FlowControl _flow_control;
 		TDeviceMap  _devices;
+		bool        _show_dialog;
 
 		void initialize();
 
@@ -115,6 +116,14 @@ namespace SimpleCom {
 
 		inline TDeviceMap& GetDevices() {
 			return _devices;
+		}
+
+		inline void SetShowDialog(bool value) {
+			_show_dialog = value;
+		}
+
+		inline bool IsShowDialog() {
+			return _show_dialog;
 		}
 
 		bool ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept;

@@ -274,9 +274,15 @@ int _tmain(int argc, LPCTSTR argv[])
 			// command line mode
 			setup.ParseArguments(argc, argv);
 		}
-		else if (!setup.ShowConfigureDialog(NULL, parent_hwnd)) {
+		else {
+			// GUI mode
+			setup.SetShowDialog(true);
+		}
+
+		if (setup.IsShowDialog() && !setup.ShowConfigureDialog(NULL, parent_hwnd)) {
 			return -1;
 		}
+
 		device = _T(R"(\\.\)") + setup.GetPort();
 		setup.SaveToDCB(&dcb);
 	}

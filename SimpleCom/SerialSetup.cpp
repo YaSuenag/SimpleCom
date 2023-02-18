@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2023, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -57,7 +57,8 @@ SimpleCom::SerialSetup::SerialSetup() : _port(),
 										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
 										_stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
 										_flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
-										_devices()
+										_devices(),
+										_show_dialog(false)
 {
 	initialize();
 }
@@ -384,6 +385,9 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 			else {
 				throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --flow-control"));
 			}
+		}
+		else if (_tcscmp(_T("--show-dialog"), argv[i]) == 0) {
+			_show_dialog = true;
 		}
 		else {
 			TRegex re(_T("^COM\\d+$"));
