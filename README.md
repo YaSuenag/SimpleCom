@@ -21,6 +21,8 @@ Console app for serial connection.
 
 * `--show-dialog`
     * Show setup dialog even if command line arguments are passed.
+* `--wait-serial-device [seconds]`
+    * Wait specified seconds for serial devices are available.
 * `--baud-rate [num]`
     * baud rate
     * default: `115200`

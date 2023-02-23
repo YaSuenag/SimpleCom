@@ -19,6 +19,7 @@
 #include "stdafx.h"
 
 #include "SerialSetup.h"
+#include "SerialDeviceScanner.h"
 #include "SerialPortWriter.h"
 #include "WinAPIException.h"
 #include "util.h"
@@ -245,7 +246,8 @@ int _tmain(int argc, LPCTSTR argv[])
 
 	// Serial port configuration
 	try {
-		SimpleCom::SerialSetup setup;
+		SimpleCom::SerialDeviceScanner scanner(parent_hwnd);
+		SimpleCom::SerialSetup setup(&scanner);
 		if (argc > 1) {
 			// command line mode
 			setup.ParseArguments(argc, argv);
@@ -255,7 +257,18 @@ int _tmain(int argc, LPCTSTR argv[])
 			setup.SetShowDialog(true);
 		}
 
-		if (setup.IsShowDialog() && !setup.ShowConfigureDialog(NULL, parent_hwnd)) {
+		if (setup.GetWaitDevicePeriod() > 0) {
+			scanner.SetTargetPort(setup.GetPort());
+			scanner.WaitSerialDevices(setup.GetWaitDevicePeriod());
+			if (scanner.GetDevices().empty()) {
+				throw SimpleCom::SerialDeviceScanException(_T("Waiting for serial device"), _T("Serial device is not available"));
+			}
+		}
+		else {
+			scanner.ScanSerialDevices();
+		}
+
+		if (setup.IsShowDialog() && !setup.ShowConfigureDialog(nullptr, parent_hwnd)) {
 			return -1;
 		}
 
@@ -269,6 +282,10 @@ int _tmain(int argc, LPCTSTR argv[])
 	catch (SimpleCom::SerialSetupException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -2;
+	}
+	catch (SimpleCom::SerialDeviceScanException& e) {
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		return -3;
 	}
 
 	try {
@@ -298,7 +315,7 @@ int _tmain(int argc, LPCTSTR argv[])
 	}
 	catch (SimpleCom::WinAPIException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		return -3;
+		return -4;
 	}
 
 	return 0;

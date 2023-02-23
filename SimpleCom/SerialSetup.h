@@ -21,6 +21,7 @@
 #include "stdafx.h"
 
 #include "EnumValue.h"
+#include "SerialDeviceScanner.h"
 
 namespace SimpleCom {
 
@@ -42,8 +43,6 @@ namespace SimpleCom {
 		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 	};
 
-	typedef std::map<TString, TString> TDeviceMap;
-
 	/*
 	 * This class shows setup dialog box for serial connection.
 	 * The caller can retrieve serial configuration which the user sets on dialog box as `LPDCB`.
@@ -57,13 +56,12 @@ namespace SimpleCom {
 		Parity      _parity;
 		StopBits    _stop_bits;
 		FlowControl _flow_control;
-		TDeviceMap  _devices;
 		bool        _show_dialog;
-
-		void initialize();
+		int         _wait_device_period;
+		SerialDeviceScanner* _scanner;
 
 	public:
-		SerialSetup();
+		SerialSetup(SerialDeviceScanner* scanner);
 		virtual ~SerialSetup();
 
 		inline void SetPort(const TString& port) {
@@ -114,16 +112,20 @@ namespace SimpleCom {
 			return _flow_control;
 		}
 
-		inline TDeviceMap& GetDevices() {
-			return _devices;
-		}
-
 		inline void SetShowDialog(bool value) {
 			_show_dialog = value;
 		}
 
 		inline bool IsShowDialog() {
 			return _show_dialog;
+		}
+
+		inline int GetWaitDevicePeriod() {
+			return _wait_device_period;
+		}
+
+		inline SerialDeviceScanner* GetDeviceScanner() {
+			return _scanner;
 		}
 
 		bool ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept;

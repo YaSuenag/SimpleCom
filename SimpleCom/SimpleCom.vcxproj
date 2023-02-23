@@ -107,6 +107,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <UseFullPaths>false</UseFullPaths>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -164,6 +165,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="SerialDeviceScanner.cpp" />
     <ClCompile Include="SerialPortWriter.cpp" />
     <ClCompile Include="SerialSetup.cpp" />
     <ClCompile Include="SimpleCom.cpp" />
@@ -176,6 +178,7 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="EnumValue.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SerialDeviceScanner.h" />
     <ClInclude Include="SerialPortWriter.h" />
     <ClInclude Include="SerialSetup.h" />
     <ClInclude Include="stdafx.h" />
@@ -183,7 +186,7 @@
     <ClInclude Include="WinAPIException.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="SerialSetupResource.rc" />
+    <ResourceCompile Include="SimpleCom.rc" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />

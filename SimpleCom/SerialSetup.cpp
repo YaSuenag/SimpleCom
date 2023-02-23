@@ -51,85 +51,23 @@ static constexpr SimpleCom::StopBits TWO{ TWOSTOPBITS, _T("2") };
 static constexpr SimpleCom::StopBits stopbits[] = { ONE, ONE5, TWO };
 
 
-SimpleCom::SerialSetup::SerialSetup() : _port(),
+SimpleCom::SerialSetup::SerialSetup(SerialDeviceScanner* scanner) : _port(),
 										_baud_rate(115200),
 										_byte_size(8),
 										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
 										_stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
 										_flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
-										_devices(),
-										_show_dialog(false)
+										_show_dialog(false),
+										_wait_device_period(0),
+										_scanner(scanner)
 {
-	initialize();
+	// Do nothing
 }
 
 
 SimpleCom::SerialSetup::~SerialSetup()
 {
 	// Do nothing
-}
-
-/*
- * RAII class for Registry key
- */
-class RegistryKeyHandler {
-private:
-	HKEY hKey;
-
-public:
-	RegistryKeyHandler(HKEY hOpenKey, LPCTSTR lpSubKey, DWORD ulOptions, REGSAM samDesired) {
-		LSTATUS status = RegOpenKeyEx(hOpenKey, lpSubKey, ulOptions, samDesired, &hKey);
-		if (status != ERROR_SUCCESS) {
-			hKey = static_cast<HKEY>(INVALID_HANDLE_VALUE);
-			throw SimpleCom::WinAPIException(GetLastError(), lpSubKey);
-		}
-	}
-
-	~RegistryKeyHandler() {
-		if (hKey != INVALID_HANDLE_VALUE) {
-			RegCloseKey(hKey);
-		}
-	}
-
-	HKEY key() {
-		return hKey;
-	}
-};
-
-void SimpleCom::SerialSetup::initialize() {
-	// Generates device map of serial interface name and device name
-	// from HKLM\HARDWARE\DEVICEMAP\SERIALCOMM.
-
-	RegistryKeyHandler hkeyHandler(HKEY_LOCAL_MACHINE, _T(R"(HARDWARE\DEVICEMAP\SERIALCOMM)"), REG_OPTION_OPEN_LINK, KEY_READ);
-	HKEY hKey = hkeyHandler.key();
-
-	DWORD numValues, maxValueNameLen, maxValueLen;
-	LSTATUS status = RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &numValues, &maxValueNameLen, &maxValueLen, NULL, NULL);
-	if (status != ERROR_SUCCESS) {
-		throw WinAPIException(status, _T("RegQueryInfoKey"));
-	}
-	else if (numValues <= 0) {
-		throw SerialSetupException(_T("configuration"), _T("Serial interface not found"));
-	}
-
-	maxValueLen++;
-	maxValueNameLen++;
-	LPTSTR DeviceName = new TCHAR[maxValueLen];
-	LPTSTR InterfaceName = new TCHAR[maxValueNameLen];
-
-	for (DWORD idx = 0; idx < numValues; idx++) {
-		DWORD ValueNameLen = maxValueNameLen;
-		DWORD ValueLen = maxValueLen;
-
-		status = RegEnumValue(hKey, idx, InterfaceName, &ValueNameLen, NULL, NULL, reinterpret_cast<LPBYTE>(DeviceName), &ValueLen);
-		if (status == ERROR_SUCCESS) {
-			_devices[DeviceName] = InterfaceName;
-		}
-
-	}
-
-	delete[] InterfaceName;
-	delete[] DeviceName;
 }
 
 static void AddStringToComboBox(HWND hCombo, TString str) {
@@ -152,11 +90,18 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	if (hComboSerialDevice == NULL) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
 	}
-	for (auto itr = setup->GetDevices().begin(); itr != setup->GetDevices().end(); itr++) {
-		text_str = itr->first + _T(": ") + itr->second;
+	int idx = 0;
+	int cb_idx = 0;
+	auto devices = setup->GetDeviceScanner()->GetDevices();
+	for (auto itr = devices.begin(); itr != devices.end(); itr++, idx++) {
+		const TString& port = itr->first;
+		text_str = port + _T(": ") + itr->second;
 		AddStringToComboBox(hComboSerialDevice, text_str);
+		if (port == setup->GetPort()) {
+			cb_idx = idx;
+		}
 	}
-	SendMessage(hComboSerialDevice, CB_SETCURSEL, 0, 0);
+	SendMessage(hComboSerialDevice, CB_SETCURSEL, cb_idx, 0);
 
 	text_str = TO_STRING(setup->GetBaudRate());
 	if (!SetDlgItemText(hDlg, IDC_BAUD_RATE, text_str.c_str())) {
@@ -211,7 +156,7 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 	if (selected_idx == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_SERIAL_DEVICE"));
 	}
-	auto target = setup->GetDevices().begin();
+	auto target = setup->GetDeviceScanner()->GetDevices().begin();
 	for (int i = 0; i < selected_idx; i++, target++) {
 		// Do nothing
 	}
@@ -387,6 +332,22 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 				}
 				else {
 					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --flow-control"));
+				}
+			}
+			else if (_tcscmp(_T("--wait-serial-device"), argv[i]) == 0) {
+				try {
+					size_t idx;
+					LPCTSTR str = argv[++i];
+					_wait_device_period = std::stoi(str, &idx);
+					if (str[idx] != 0) {
+						throw std::invalid_argument("--wait-serial-device");
+					}
+					if (_wait_device_period < 1) {
+						throw std::invalid_argument("--wait-serial-device");
+					}
+				}
+				catch (...) {
+					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --wait-serial-device"));
 				}
 			}
 			else {

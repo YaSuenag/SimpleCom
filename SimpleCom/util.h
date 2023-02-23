@@ -21,10 +21,9 @@
 #include <Windows.h>
 #include "WinAPIException.h"
 
-
- /*
-  * RAII for HANDLE
-  */
+/*
+ * RAII for HANDLE
+ */
 class HandleHandler {
 private:
 	HANDLE _handle;
@@ -44,5 +43,32 @@ public:
 
 	inline HANDLE handle() {
 		return _handle;
+	}
+};
+
+/*
+ * RAII class for Registry key
+ */
+class RegistryKeyHandler {
+private:
+	HKEY hKey;
+
+public:
+	RegistryKeyHandler(HKEY hOpenKey, LPCTSTR lpSubKey, DWORD ulOptions, REGSAM samDesired) {
+		LSTATUS status = RegOpenKeyEx(hOpenKey, lpSubKey, ulOptions, samDesired, &hKey);
+		if (status != ERROR_SUCCESS) {
+			hKey = static_cast<HKEY>(INVALID_HANDLE_VALUE);
+			throw SimpleCom::WinAPIException(GetLastError(), lpSubKey);
+		}
+	}
+
+	~RegistryKeyHandler() {
+		if (hKey != INVALID_HANDLE_VALUE) {
+			RegCloseKey(hKey);
+		}
+	}
+
+	HKEY key() {
+		return hKey;
 	}
 };
