@@ -21,6 +21,7 @@
 #include "SerialSetup.h"
 #include "SerialPortWriter.h"
 #include "WinAPIException.h"
+#include "util.h"
 #include "debug.h"
 
 static HANDLE stdoutRedirectorThread;
@@ -235,31 +236,6 @@ static void InitConsole() {
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
 }
-
-/*
- * RAII for HANDLE
- */
-class HandleHandler {
-private:
-	HANDLE _handle;
-
-public:
-	HandleHandler(HANDLE handle, LPCTSTR error_caption) : _handle(handle) {
-		if (_handle == INVALID_HANDLE_VALUE) {
-			throw SimpleCom::WinAPIException(GetLastError(), error_caption);
-		}
-	}
-
-	~HandleHandler() {
-		if (_handle != INVALID_HANDLE_VALUE) {
-			CloseHandle(_handle);
-		}
-	}
-
-	inline HANDLE handle() {
-		return _handle;
-	}
-};
 
 int _tmain(int argc, LPCTSTR argv[])
 {

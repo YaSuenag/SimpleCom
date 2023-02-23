@@ -179,6 +179,7 @@
     <ClInclude Include="SerialPortWriter.h" />
     <ClInclude Include="SerialSetup.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="util.h" />
     <ClInclude Include="WinAPIException.h" />
   </ItemGroup>
   <ItemGroup>
