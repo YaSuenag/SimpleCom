@@ -19,6 +19,8 @@ Console app for serial connection.
 
 ## Command line options
 
+* `--show-dialog`
+    * Show setup dialog even if command line arguments are passed.
 * `--baud-rate [num]`
     * baud rate
     * default: `115200`
