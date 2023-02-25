@@ -132,13 +132,9 @@ void SimpleCom::SerialDeviceScanner::WaitSerialDevices(const int period) {
 		if (result == WAIT_TIMEOUT) {
 			SetEvent(_device_scan_event);
 			SendMessage(_dialog_hwnd, WM_APP, 0, 0);
-			WaitForSingleObject(dialogThreadHnd.handle(), INFINITE);
-			WaitForSingleObject(scanThreadHnd.handle(), INFINITE);
 			throw SimpleCom::SerialDeviceScanException(_T("Waiting for serial device"), _T("Timed out"));
 		}
 		else if (result != WAIT_OBJECT_0) {
-			WaitForSingleObject(dialogThreadHnd.handle(), INFINITE);
-			WaitForSingleObject(scanThreadHnd.handle(), INFINITE);
 			throw SimpleCom::WinAPIException(GetLastError(), _T("WaitForSingleObject() for waiting for serial device"));
 		}
 	}
