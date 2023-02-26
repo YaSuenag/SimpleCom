@@ -85,20 +85,21 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	// Initial value is for serial console of Raspberry Pi.
 
 	TString text_str;
+	WPARAM cb_idx;
 
 	HWND hComboSerialDevice = GetDlgItem(hDlg, IDC_SERIAL_DEVICE);
 	if (hComboSerialDevice == NULL) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
 	}
-	int idx = 0;
-	int cb_idx = 0;
+	cb_idx = 0;
 	auto devices = setup->GetDeviceScanner()->GetDevices();
-	for (auto itr = devices.begin(); itr != devices.end(); itr++, idx++) {
-		const TString& port = itr->first;
-		text_str = port + _T(": ") + itr->second;
+	for (auto itr : devices) {
+		const TString port = itr.first;
+		text_str = port + _T(": ") + itr.second;
 		AddStringToComboBox(hComboSerialDevice, text_str);
 		if (port == setup->GetPort()) {
-			cb_idx = idx;
+			auto target_itr = devices.find(itr.first);
+			cb_idx = std::distance(devices.begin(), target_itr);
 		}
 	}
 	SendMessage(hComboSerialDevice, CB_SETCURSEL, cb_idx, 0);
@@ -117,29 +118,41 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	if (hComboParity == NULL) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_PARITY)"));
 	}
-	for (auto parity : parities) {
+	cb_idx = 0;
+	for (auto& parity : parities) {
 		AddStringToComboBox(hComboParity, parity.tstr());
+		if (parity == setup->GetParity()) {
+			cb_idx = &parity - parities;
+		}
 	}
-	SendMessage(hComboParity, CB_SETCURSEL, 0, 0);
+	SendMessage(hComboParity, CB_SETCURSEL, cb_idx, 0);
 
 
 	HWND hComboStopBits = GetDlgItem(hDlg, IDC_STOP_BITS);
 	if (hComboStopBits == NULL) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STOP_BITS)"));
 	}
-	for (auto stopbit : stopbits) {
+	cb_idx = 0;
+	for (auto& stopbit : stopbits) {
 		AddStringToComboBox(hComboStopBits, stopbit.tstr());
+		if (stopbit == setup->GetStopBits()) {
+			cb_idx = &stopbit - stopbits;
+		}
 	}
-	SendMessage(hComboStopBits, CB_SETCURSEL, 0, 0);
+	SendMessage(hComboStopBits, CB_SETCURSEL, cb_idx, 0);
 
 	HWND hComboFlowCtl = GetDlgItem(hDlg, IDC_FLOW_CTL);
 	if (hComboFlowCtl == NULL) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_FLOW_CTL)"));
 	}
-	for (auto flowctl : flowctrls) {
+	cb_idx = 0;
+	for (auto& flowctl : flowctrls) {
 		AddStringToComboBox(hComboFlowCtl, flowctl.tstr());
+		if (flowctl == setup->GetFlowControl()) {
+			cb_idx = &flowctl - flowctrls;
+		}
 	}
-	SendMessage(hComboFlowCtl, CB_SETCURSEL, 0, 0);
+	SendMessage(hComboFlowCtl, CB_SETCURSEL, cb_idx, 0);
 }
 
 /*
