@@ -69,31 +69,41 @@ static void StdInRedirector(HWND parent_hwnd) {
 	SimpleCom::SerialPortWriter writer(hSerial, buf_sz);
 
 	try {
-		while (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
-
-			if (!ReadConsoleInput(hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
-				throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
-			}
-
-			for (DWORD idx = 0; idx < n_read; idx++) {
-				if (inputs[idx].EventType == KEY_EVENT) {
-					ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, parent_hwnd);
+		HANDLE waiters[] = {hStdIn, hTermEvent};
+		while (true) {
+			DWORD result = WaitForMultipleObjects(sizeof(waiters) / sizeof(HANDLE), waiters, FALSE, INFINITE);
+			if (result == WAIT_OBJECT_0) { // hStdIn
+				if (!ReadConsoleInput(hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
+					throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
 				}
-			}
 
-			writer.WriteAsync();
+				for (DWORD idx = 0; idx < n_read; idx++) {
+					if (inputs[idx].EventType == KEY_EVENT) {
+						ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, parent_hwnd);
+					}
+				}
+
+				writer.WriteAsync();
+			}
+			else if (result == (WAIT_OBJECT_0 + 1)) { // hTermEvent
+				break;
+			}
+			else {
+				throw SimpleCom::WinAPIException(GetLastError(), _T("WaitForMultipleObjects in StdInRedirector"));
+			}
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		writer.Shutdown();
-		if (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
-			// Fire terminate event before MessageBox is shown
-			// because other threads should be terminated immediately.
-			SetEvent(hTermEvent);
+		// Fire terminate event before MessageBox is shown
+		// because other threads should be terminated immediately.
+		SetEvent(hTermEvent);
+		// We can ignore ERROR_OPERATION_ABORTED because it would be intended.
+		if (e.GetErrorCode() != ERROR_OPERATION_ABORTED) {
 			MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
 	}
 
+	writer.Shutdown();
 }
 
 static void StdOutRedirectorLoopInner(HANDLE hnd) {
@@ -165,8 +175,14 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 		catch (SimpleCom::WinAPIException& e) {
 			if (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
 				SetEvent(hTermEvent);
-				MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-				return -1;
+				if (e.GetErrorCode() == ERROR_OPERATION_ABORTED) {
+					// We can ignore ERROR_OPERATION_ABORTED because it would be intended.
+					return 0;
+				}
+				else {
+					MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+					return -1;
+				}
 			}
 		}
 	}
