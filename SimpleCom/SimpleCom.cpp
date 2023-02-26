@@ -27,9 +27,8 @@
 
 static HANDLE stdoutRedirectorThread;
 
-static HANDLE hSerial, hStdIn, hStdOut;
+static HANDLE hSerial, hStdIn, hStdOut, hTermEvent;
 static OVERLAPPED serialReadOverlapped = { 0 };
-static std::atomic_bool terminated(false);
 
 static constexpr int buf_sz = 256;
 
@@ -46,7 +45,7 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialP
 		writer.WriteAsync();
 
 		if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-			terminated.store(true, std::memory_order_release);
+			SetEvent(hTermEvent);
 			return;
 		}
 	}
@@ -70,7 +69,7 @@ static void StdInRedirector(HWND parent_hwnd) {
 	SimpleCom::SerialPortWriter writer(hSerial, buf_sz);
 
 	try {
-		while (!terminated.load(std::memory_order_acquire)) {
+		while (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
 
 			if (!ReadConsoleInput(hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
 				throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
@@ -87,11 +86,10 @@ static void StdInRedirector(HWND parent_hwnd) {
 	}
 	catch (SimpleCom::WinAPIException& e) {
 		writer.Shutdown();
-
-		if (!terminated.load(std::memory_order_acquire)) {
-			// Set terminated flag to true before MessageBox is shown
+		if (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
+			// Fire terminate event before MessageBox is shown
 			// because other threads should be terminated immediately.
-			terminated.store(true, std::memory_order_release);
+			SetEvent(hTermEvent);
 			MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
 	}
@@ -155,7 +153,7 @@ static void StdOutRedirectorLoopInner(HANDLE hnd) {
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 	HWND parent_hwnd = reinterpret_cast<HWND>(lpParameter);
 
-	while (!terminated.load(std::memory_order_acquire)) {
+	while (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
 		try {
 
 			if (!ResetEvent(serialReadOverlapped.hEvent)) {
@@ -165,8 +163,8 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 			StdOutRedirectorLoopInner(hStdOut);
 		}
 		catch (SimpleCom::WinAPIException& e) {
-			if (!terminated.load(std::memory_order_acquire)) {
-				terminated.store(true, std::memory_order_release);
+			if (WaitForSingleObject(hTermEvent, 0) != WAIT_OBJECT_0) {
+				SetEvent(hTermEvent);
 				MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 				return -1;
 			}
@@ -299,7 +297,8 @@ int _tmain(int argc, LPCTSTR argv[])
 
 		InitConsole();
 
-		terminated.store(false, std::memory_order_release);
+		HandleHandler termEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination"));
+		hTermEvent = termEvent.handle();
 
 		// Create stdout redirector
 		HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, parent_hwnd, 0, NULL), _T("CreateThread for StdOutRedirector"));

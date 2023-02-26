@@ -13,7 +13,6 @@
 
 #include <tchar.h>
 
-#include <atomic>
 #include <iostream>
 #include <map>
 #include <regex>
