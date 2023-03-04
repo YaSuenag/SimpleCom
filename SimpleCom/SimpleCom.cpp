@@ -50,12 +50,9 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialP
 		}
 	}
 
-	if (keyevent.bKeyDown) {
+	if (keyevent.bKeyDown && (keyevent.uChar.AsciiChar != '\0')) {
 		for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
-			char ch = keyevent.uChar.AsciiChar;
-			if (ch != '\0') {
-				writer.Put(keyevent.uChar.AsciiChar);
-			}
+			writer.Put(keyevent.uChar.AsciiChar);
 		}
 	}
 
