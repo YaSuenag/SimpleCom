@@ -248,7 +248,7 @@ static void InitConsole() {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
 	}
 	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE, __FILE__, __LINE__);
-	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
 }
 
