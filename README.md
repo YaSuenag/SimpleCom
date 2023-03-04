@@ -83,6 +83,7 @@ Please see [Applications installed from the web](https://docs.microsoft.com/ja-j
 
 * SimpleCom sends / receives VT100 escape sequences. So the serial device to connect via SimpleCom needs to support VT100 or compatible shell.
 * SimpleCom supports ANSI chars only, so it would not work if multibyte chars (e.g. CJK chars) are given.
+* Run [resize](https://linux.die.net/man/1/resize) provided by xterm if you want to align VT size of Linux box with your console window.
 
 # License
 
