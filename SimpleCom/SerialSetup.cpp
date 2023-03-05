@@ -57,6 +57,7 @@ SimpleCom::SerialSetup::SerialSetup(SerialDeviceScanner* scanner) : _port(),
 										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
 										_stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
 										_flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
+										_use_utf8(false),
 										_show_dialog(false),
 										_wait_device_period(0),
 										_scanner(scanner)
@@ -153,6 +154,12 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		}
 	}
 	SendMessage(hComboFlowCtl, CB_SETCURSEL, cb_idx, 0);
+
+	HWND hCheckUTF8 = GetDlgItem(hDlg, IDC_CHECK_UTF8);
+	if (hCheckUTF8 == nullptr) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_UTF8)"));
+	}
+	SendMessage(hCheckUTF8, BM_SETCHECK, setup->GetUseUTF8() ? BST_CHECKED : BST_UNCHECKED, 0);
 }
 
 /*
@@ -207,6 +214,9 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_FLOW_CTL"));
 	}
 	setup->SetFlowControl(const_cast<SimpleCom::FlowControl&>(flowctrls[selected_idx]));
+
+	auto checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_UTF8), BM_GETCHECK, 0, 0);
+	setup->SetUseUTF8(checked == BST_CHECKED);
 
 	return true;
 }
@@ -265,6 +275,9 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 	for (; i < argc; i++) {
 		if (_tcscmp(_T("--show-dialog"), argv[i]) == 0) {
 			_show_dialog = true;
+		}
+		else if (_tcscmp(_T("--utf8"), argv[i]) == 0) {
+			_use_utf8 = true;
 		}
 		else if (_tcsncmp(_T("--"), argv[i], 2) == 0) {
 			if ((i + 1) == argc) {

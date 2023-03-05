@@ -23,6 +23,8 @@ Console app for serial connection.
     * Show setup dialog even if command line arguments are passed.
 * `--wait-serial-device [seconds]`
     * Wait specified seconds for serial devices are available.
+* `--utf8`
+    * Use UTF-8 code page on SimpleCom console.
 * `--baud-rate [num]`
     * baud rate
     * default: `115200`

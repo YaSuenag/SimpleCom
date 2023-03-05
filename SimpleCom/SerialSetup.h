@@ -56,6 +56,7 @@ namespace SimpleCom {
 		Parity      _parity;
 		StopBits    _stop_bits;
 		FlowControl _flow_control;
+		bool        _use_utf8;
 		bool        _show_dialog;
 		int         _wait_device_period;
 		SerialDeviceScanner* _scanner;
@@ -110,6 +111,14 @@ namespace SimpleCom {
 
 		inline FlowControl& GetFlowControl() {
 			return _flow_control;
+		}
+
+		inline void SetUseUTF8(bool enabled) {
+			_use_utf8 = enabled;
+		}
+
+		inline bool GetUseUTF8() {
+			return _use_utf8;
 		}
 
 		inline void SetShowDialog(bool value) {

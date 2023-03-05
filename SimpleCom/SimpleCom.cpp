@@ -231,7 +231,19 @@ static void InitSerialPort(TString &device, DCB *dcb) {
 	CALL_WINAPI_WITH_DEBUGLOG(SetCommTimeouts(hSerial, &comm_timeouts), TRUE, __FILE__, __LINE__)
 }
 
-static void InitConsole() {
+static void InitConsole(SimpleCom::SerialSetup& setup) {
+	TStringStream ss;
+	ss << "Current code page: " << GetConsoleCP();
+	SimpleCom::debug::log(ss.str().c_str());
+
+	if (setup.GetUseUTF8()) {
+		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleCP(CP_UTF8), TRUE, __FILE__, __LINE__);
+		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleOutputCP(CP_UTF8), TRUE, __FILE__, __LINE__);
+		TStringStream ss2;
+		ss2 << "Code page changed: " << GetConsoleCP();
+		SimpleCom::debug::log(ss2.str().c_str());
+	}
+
 	DWORD mode;
 
 	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -250,9 +262,6 @@ static void InitConsole() {
 	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE, __FILE__, __LINE__);
 	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
-
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleCP(CP_UTF8), TRUE, __FILE__, __LINE__);
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleOutputCP(CP_UTF8), TRUE, __FILE__, __LINE__);
 }
 
 int _tmain(int argc, LPCTSTR argv[])
@@ -273,6 +282,8 @@ int _tmain(int argc, LPCTSTR argv[])
 			// GUI mode
 			setup.SetShowDialog(true);
 		}
+
+		InitConsole(setup);
 
 		if (setup.GetWaitDevicePeriod() > 0) {
 			scanner.SetTargetPort(setup.GetPort());
@@ -313,8 +324,6 @@ int _tmain(int argc, LPCTSTR argv[])
 
 		HandleHandler evt(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device"));
 		serialReadOverlapped.hEvent = evt.handle();
-
-		InitConsole();
 
 		HandleHandler termEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination"));
 		hTermEvent = termEvent.handle();
