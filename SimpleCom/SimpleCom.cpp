@@ -31,6 +31,7 @@ static HANDLE hSerial, hStdIn, hStdOut, hTermEvent;
 static OVERLAPPED serialReadOverlapped = { 0 };
 
 static constexpr int buf_sz = 256;
+static volatile bool terminated = false;
 
 
 /*
@@ -46,6 +47,7 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialP
 
 		if (MessageBox(parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 			SetEvent(hTermEvent);
+			terminated = true;
 			return;
 		}
 	}
@@ -264,6 +266,32 @@ static void InitConsole(SimpleCom::SerialSetup& setup) {
 	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
 }
 
+static void Connect(TString &device, DCB *dcb, const HWND parent_hwnd) {
+	// Open serial device
+	HandleHandler hnd(CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), _T("Open serial port"));
+	hSerial = hnd.handle();
+
+	InitSerialPort(device, dcb);
+
+	HandleHandler evt(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device"));
+	serialReadOverlapped.hEvent = evt.handle();
+
+	HandleHandler termEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination"));
+	hTermEvent = termEvent.handle();
+
+	// Create stdout redirector
+	HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, parent_hwnd, 0, NULL), _T("CreateThread for StdOutRedirector"));
+	stdoutRedirectorThread = threadHnd.handle();
+
+	// stdin redirector would perform in current thread
+	StdInRedirector(parent_hwnd);
+
+	// stdin redirector should be finished at this point.
+	// It means end of serial communication. So we should terminate stdout redirector.
+	CALL_WINAPI_WITH_DEBUGLOG(CancelIoEx(hSerial, &serialReadOverlapped), TRUE, __FILE__, __LINE__)
+	WaitForSingleObject(stdoutRedirectorThread, INFINITE);
+}
+
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
@@ -302,6 +330,23 @@ int _tmain(int argc, LPCTSTR argv[])
 
 		device = _T(R"(\\.\)") + setup.GetPort();
 		setup.SaveToDCB(&dcb);
+
+		while (!terminated) {
+			Connect(device, &dcb, parent_hwnd);
+			if (setup.GetAutoReconnect()) {
+				Sleep(setup.GetAutoReconnectPauseInSec() * 1000);
+
+				SimpleCom::SerialDeviceScanner scanner(parent_hwnd);
+				scanner.SetTargetPort(setup.GetPort());
+				scanner.WaitSerialDevices(setup.GetAutoReconnectTimeoutInSec());
+				if (scanner.GetDevices().empty()) {
+					throw SimpleCom::SerialDeviceScanException(_T("Waiting for serial device"), _T("Serial device is not available"));
+				}
+			}
+			else {
+				break;
+			}
+		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
@@ -314,35 +359,6 @@ int _tmain(int argc, LPCTSTR argv[])
 	catch (SimpleCom::SerialDeviceScanException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -3;
-	}
-
-	try {
-		// Open serial device
-		HandleHandler hnd(CreateFile(device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), _T("Open serial port"));
-		hSerial = hnd.handle();
-		InitSerialPort(device, &dcb);
-
-		HandleHandler evt(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device"));
-		serialReadOverlapped.hEvent = evt.handle();
-
-		HandleHandler termEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination"));
-		hTermEvent = termEvent.handle();
-
-		// Create stdout redirector
-		HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, parent_hwnd, 0, NULL), _T("CreateThread for StdOutRedirector"));
-		stdoutRedirectorThread = threadHnd.handle();
-
-		// stdin redirector would perform in current thread
-		StdInRedirector(parent_hwnd);
-
-		// stdin redirector should be finished at this point.
-		// It means end of serial communication. So we should terminate stdout redirector.
-		CALL_WINAPI_WITH_DEBUGLOG(CancelIoEx(hSerial, &serialReadOverlapped), TRUE, __FILE__, __LINE__)
-		WaitForSingleObject(stdoutRedirectorThread, INFINITE);
-	}
-	catch (SimpleCom::WinAPIException& e) {
-		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		return -4;
 	}
 
 	return 0;

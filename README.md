@@ -54,6 +54,15 @@ Console app for serial connection.
         * `hardware`
         * `software`
     * default: `none`
+* `--auto-reconnect`
+    * Reconnect to peripheral automatically when serial session is disconnected.
+    * default: false
+* `--auto-reconnect-pause [num]`
+    * Pause time in seconds before reconnecting to peripheral.
+    * default: `3`
+* `--auto-reconnect-timeout`
+    * Reconnect timeout
+    * default: `120`
 
 # How to build
 

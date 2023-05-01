@@ -60,6 +60,9 @@ namespace SimpleCom {
 		bool        _show_dialog;
 		int         _wait_device_period;
 		SerialDeviceScanner* _scanner;
+		bool        _auto_reconnect;
+		int         _auto_reconnect_pause_in_sec;
+		int         _auto_reconnect_timeout_in_sec;
 
 	public:
 		SerialSetup(SerialDeviceScanner* scanner);
@@ -131,6 +134,30 @@ namespace SimpleCom {
 
 		inline int GetWaitDevicePeriod() {
 			return _wait_device_period;
+		}
+
+		inline void SetAutoReconnect(bool enabled) {
+			_auto_reconnect = enabled;
+		}
+
+		inline bool GetAutoReconnect() {
+			return _auto_reconnect;
+		}
+
+		inline void SetAutoReconnectPauseInSec(int sec) {
+			_auto_reconnect_pause_in_sec = sec;
+		}
+
+		inline int GetAutoReconnectPauseInSec() {
+			return _auto_reconnect_pause_in_sec;
+		}
+
+		inline void SetAutoReconnectTimeoutInSec(int sec) {
+			_auto_reconnect_timeout_in_sec = sec;
+		}
+
+		inline int GetAutoReconnectTimeoutInSec() {
+			return _auto_reconnect_timeout_in_sec;
 		}
 
 		inline SerialDeviceScanner* GetDeviceScanner() {

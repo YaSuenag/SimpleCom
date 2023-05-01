@@ -60,7 +60,10 @@ SimpleCom::SerialSetup::SerialSetup(SerialDeviceScanner* scanner) : _port(),
 										_use_utf8(false),
 										_show_dialog(false),
 										_wait_device_period(0),
-										_scanner(scanner)
+										_scanner(scanner),
+	                                    _auto_reconnect(false),
+	                                    _auto_reconnect_pause_in_sec(3),
+	                                    _auto_reconnect_timeout_in_sec(120)
 {
 	// Do nothing
 }
@@ -160,6 +163,23 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_UTF8)"));
 	}
 	SendMessage(hCheckUTF8, BM_SETCHECK, setup->GetUseUTF8() ? BST_CHECKED : BST_UNCHECKED, 0);
+
+	HWND hCheckAutoReconnect = GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT);
+	if (hCheckAutoReconnect == nullptr) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_AUTO_RECONNECT)"));
+	}
+	SendMessage(hCheckUTF8, BM_SETCHECK, setup->GetAutoReconnect() ? BST_CHECKED : BST_UNCHECKED, 0);
+
+	text_str = TO_STRING(setup->GetAutoReconnectPauseInSec());
+	if (!SetDlgItemText(hDlg, IDC_RECONNECT_PAUSE, text_str.c_str())) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_RECONNECT_PAUSE)"));
+	}
+
+	text_str = TO_STRING(setup->GetAutoReconnectTimeoutInSec());
+	if (!SetDlgItemText(hDlg, IDC_RECONNECT_TIMEOUT, text_str.c_str())) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_RECONNECT_TIMEOUT)"));
+	}
+
 }
 
 /*
@@ -217,6 +237,21 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 
 	auto checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_UTF8), BM_GETCHECK, 0, 0);
 	setup->SetUseUTF8(checked == BST_CHECKED);
+
+	checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT), BM_GETCHECK, 0, 0);
+	setup->SetAutoReconnect(checked == BST_CHECKED);
+
+	intval = GetDlgItemInt(hDlg, IDC_RECONNECT_PAUSE, &translated, FALSE);
+	if (!translated) {
+		return false;
+	}
+	setup->SetAutoReconnectPauseInSec(intval);
+
+	intval = GetDlgItemInt(hDlg, IDC_RECONNECT_TIMEOUT, &translated, FALSE);
+	if (!translated) {
+		return false;
+	}
+	setup->SetAutoReconnectTimeoutInSec(intval);
 
 	return true;
 }
@@ -278,6 +313,9 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 		}
 		else if (_tcscmp(_T("--utf8"), argv[i]) == 0) {
 			_use_utf8 = true;
+		}
+		else if (_tcscmp(_T("--auto-reconnect"), argv[i]) == 0) {
+			_auto_reconnect = true;
 		}
 		else if (_tcsncmp(_T("--"), argv[i], 2) == 0) {
 			if ((i + 1) == argc) {
@@ -374,6 +412,32 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 				}
 				catch (...) {
 					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --wait-serial-device"));
+				}
+			}
+			else if (_tcscmp(_T("--auto-reconnect-pause"), argv[i]) == 0) {
+				try {
+					size_t idx;
+					LPCTSTR str = argv[++i];
+					_auto_reconnect_pause_in_sec = std::stoi(str, &idx);
+					if (str[idx] != 0) {
+						throw std::invalid_argument("--auto-reconnect-pause");
+					}
+				}
+				catch (...) {
+					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --auto-reconnect-pause"));
+				}
+			}
+			else if (_tcscmp(_T("--auto-reconnect-timeout"), argv[i]) == 0) {
+				try {
+					size_t idx;
+					LPCTSTR str = argv[++i];
+					_auto_reconnect_timeout_in_sec = std::stoi(str, &idx);
+					if (str[idx] != 0) {
+						throw std::invalid_argument("--auto-reconnect-timeout");
+					}
+				}
+				catch (...) {
+					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --auto-reconnect-timeout"));
 				}
 			}
 			else {
