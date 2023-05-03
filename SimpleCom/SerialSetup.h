@@ -59,13 +59,13 @@ namespace SimpleCom {
 		bool        _use_utf8;
 		bool        _show_dialog;
 		int         _wait_device_period;
-		SerialDeviceScanner* _scanner;
+		SerialDeviceScanner _scanner;
 		bool        _auto_reconnect;
 		int         _auto_reconnect_pause_in_sec;
 		int         _auto_reconnect_timeout_in_sec;
 
 	public:
-		SerialSetup(SerialDeviceScanner* scanner);
+		SerialSetup();
 		virtual ~SerialSetup();
 
 		inline void SetPort(const TString& port) {
@@ -160,7 +160,7 @@ namespace SimpleCom {
 			return _auto_reconnect_timeout_in_sec;
 		}
 
-		inline SerialDeviceScanner* GetDeviceScanner() {
+		inline SerialDeviceScanner& GetDeviceScanner() {
 			return _scanner;
 		}
 

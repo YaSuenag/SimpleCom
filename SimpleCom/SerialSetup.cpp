@@ -51,7 +51,7 @@ static constexpr SimpleCom::StopBits TWO{ TWOSTOPBITS, _T("2") };
 static constexpr SimpleCom::StopBits stopbits[] = { ONE, ONE5, TWO };
 
 
-SimpleCom::SerialSetup::SerialSetup(SerialDeviceScanner* scanner) : _port(),
+SimpleCom::SerialSetup::SerialSetup() : _port(),
 										_baud_rate(115200),
 										_byte_size(8),
 										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
@@ -60,7 +60,7 @@ SimpleCom::SerialSetup::SerialSetup(SerialDeviceScanner* scanner) : _port(),
 										_use_utf8(false),
 										_show_dialog(false),
 										_wait_device_period(0),
-										_scanner(scanner),
+										_scanner(),
 	                                    _auto_reconnect(false),
 	                                    _auto_reconnect_pause_in_sec(3),
 	                                    _auto_reconnect_timeout_in_sec(120)
@@ -96,7 +96,7 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
 	}
 	cb_idx = 0;
-	auto devices = setup->GetDeviceScanner()->GetDevices();
+	auto devices = setup->GetDeviceScanner().GetDevices();
 	for (auto itr : devices) {
 		const TString port = itr.first;
 		text_str = port + _T(": ") + itr.second;
@@ -196,7 +196,7 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 	if (selected_idx == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_SERIAL_DEVICE"));
 	}
-	auto target = setup->GetDeviceScanner()->GetDevices().begin();
+	auto target = setup->GetDeviceScanner().GetDevices().begin();
 	for (int i = 0; i < selected_idx; i++, target++) {
 		// Do nothing
 	}

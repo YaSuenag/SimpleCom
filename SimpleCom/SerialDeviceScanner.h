@@ -27,24 +27,19 @@ namespace SimpleCom {
 	{
 	private:
 		HANDLE        _device_scan_event;
-		HWND          _parent_hwnd;
 		volatile HWND _dialog_hwnd;
 		TDeviceMap    _devices;
 		TString       _target_port;
 
 	public:
-		SerialDeviceScanner(HWND parent_hwnd);
+		SerialDeviceScanner();
 		virtual ~SerialDeviceScanner();
 
-		void WaitSerialDevices(const int period);
+		void WaitSerialDevices(const HWND parent_hwnd, const int period);
 		void ScanSerialDevices();
 
 		inline HANDLE GetDeviceScanEvent() {
 			return _device_scan_event;
-		}
-
-		inline HWND GetParentHwnd() {
-			return _parent_hwnd;
 		}
 
 		inline void SetDialogHwnd(HWND hwnd) {

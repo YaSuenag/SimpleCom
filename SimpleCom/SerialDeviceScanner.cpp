@@ -23,10 +23,15 @@
 #include "util.h"
 #include "resource.h"
 
-SimpleCom::SerialDeviceScanner::SerialDeviceScanner(HWND parent_hwnd) : _parent_hwnd(parent_hwnd),
-                                                                        _dialog_hwnd(nullptr),
-                                                                        _devices(),
-                                                                        _target_port()
+typedef struct {
+	SimpleCom::SerialDeviceScanner* scanner;
+	HWND parent_hwnd;
+} TWaitSerialDeviceDlgEntryParam;
+
+
+SimpleCom::SerialDeviceScanner::SerialDeviceScanner() : _dialog_hwnd(nullptr),
+                                                        _devices(),
+                                                        _target_port()
 {
 	_device_scan_event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 	if (_device_scan_event == INVALID_HANDLE_VALUE) {
@@ -80,9 +85,9 @@ static INT_PTR CALLBACK WaitDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
  * Entry point for waiting serial device dialog.
  */
 DWORD WINAPI WaitSerialDeviceDlgEntry(_In_ LPVOID lpParameter) {
-	SimpleCom::SerialDeviceScanner* scanner = reinterpret_cast<SimpleCom::SerialDeviceScanner*>(lpParameter);
-	DialogBoxParam(nullptr, MAKEINTRESOURCE(IDD_WAIT_DEVICE), scanner->GetParentHwnd(), &WaitDlgProc, reinterpret_cast<LPARAM>(scanner));
-	SetEvent(scanner->GetDeviceScanEvent());
+	TWaitSerialDeviceDlgEntryParam *param = reinterpret_cast<TWaitSerialDeviceDlgEntryParam*>(lpParameter);
+	DialogBoxParam(nullptr, MAKEINTRESOURCE(IDD_WAIT_DEVICE), param->parent_hwnd, &WaitDlgProc, reinterpret_cast<LPARAM>(param->scanner));
+	SetEvent(param->scanner->GetDeviceScanEvent());
 	return 0;
 }
 
@@ -118,9 +123,10 @@ DWORD WINAPI WaitSerialDeviceEntry(_In_ LPVOID lpParameter) {
 	return 0;
 }
 
-void SimpleCom::SerialDeviceScanner::WaitSerialDevices(const int period) {
+void SimpleCom::SerialDeviceScanner::WaitSerialDevices(const HWND parent_hwnd, const int period) {
 	ResetEvent(_device_scan_event); // Use event for preparing dialog
-	HandleHandler dialogThreadHnd(CreateThread(nullptr, 0, &WaitSerialDeviceDlgEntry, this, 0, nullptr), _T("CreateThread for WaitSerialDeviceDlgEntry failed"));
+	TWaitSerialDeviceDlgEntryParam param = { .scanner = this, .parent_hwnd = parent_hwnd };
+	HandleHandler dialogThreadHnd(CreateThread(nullptr, 0, &WaitSerialDeviceDlgEntry, &param, 0, nullptr), _T("CreateThread for WaitSerialDeviceDlgEntry failed"));
 	WaitForSingleObject(_device_scan_event, INFINITE); // Dialog is ready
 
 	ResetEvent(_device_scan_event); // Use event for waiting serial device
