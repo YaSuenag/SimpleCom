@@ -19,50 +19,19 @@ Console app for serial connection.
 
 ## Command line options
 
-* `--show-dialog`
-    * Show setup dialog even if command line arguments are passed.
-* `--wait-serial-device [seconds]`
-    * Wait specified seconds for serial devices are available.
-* `--utf8`
-    * Use UTF-8 code page on SimpleCom console.
-* `--baud-rate [num]`
-    * baud rate
-    * default: `115200`
-* `--byte-size [num]`
-    * byte size
-    * default: `8`
-* `--parity [val]`
-    * parity
-    * set one of following values
-        * `none`
-        * `odd`
-        * `even`
-        * `mark`
-        * `space`
-    * default: `none`
-* `--stop-bits [val]`
-    * stop bits
-    * set one of following values
-        * `1`
-        * `1.5`
-        * `2`
-    * default: `1`
-* `--flow-control`
-    * flow control
-    * set one of following values
-        * `none`
-        * `hardware`
-        * `software`
-    * default: `none`
-* `--auto-reconnect`
-    * Reconnect to peripheral automatically when serial session is disconnected.
-    * default: false
-* `--auto-reconnect-pause [num]`
-    * Pause time in seconds before reconnecting to peripheral.
-    * default: `3`
-* `--auto-reconnect-timeout`
-    * Reconnect timeout
-    * default: `120`
+| Option | Default | Description |
+| :----- | :------ | :---------- |
+| `--show-dialog` | false | Show setup dialog even if command line arguments are passed. |
+| `--wait-serial-device [seconds]` | 0 (disable) | Wait specified seconds for serial devices are available. |
+| `--utf8` | false | Use UTF-8 code page on SimpleCom console. |
+| `--baud-rate [num]` | 115200 | Baud rate |
+| `--byte-size [num]` | 8 | Byte size |
+| `--parity [val]` | `none` | Set one of following values as a parity: <ul><li>none</li><li>odd</li><li>even</li><li>mark</li><li>space</li></ul> |
+| `--stop-bits [val]` | `1` | Set one of following values as a stop bits: <ul><li>1</li><li>1.5</li><li>2</li></ul> |
+| `--flow-control [val]` | `none` | Set one of following values as a flow control: <ul><li>none</li><li>hardware</li><li>software</li></ul> |
+| `--auto-reconnect` | false | Reconnect to peripheral automatically when serial session is disconnected. |
+| `--auto-reconnect-pause [num]` | 3 | Pause time in seconds before reconnecting to peripheral. |
+| `--auto-reconnect-timeout [num]` | 120 | Reconnect timeout |
 
 # How to build
 
