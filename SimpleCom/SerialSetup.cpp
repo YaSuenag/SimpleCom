@@ -168,7 +168,7 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	if (hCheckAutoReconnect == nullptr) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_AUTO_RECONNECT)"));
 	}
-	SendMessage(hCheckUTF8, BM_SETCHECK, setup->GetAutoReconnect() ? BST_CHECKED : BST_UNCHECKED, 0);
+	SendMessage(hCheckAutoReconnect, BM_SETCHECK, setup->GetAutoReconnect() ? BST_CHECKED : BST_UNCHECKED, 0);
 
 	text_str = TO_STRING(setup->GetAutoReconnectPauseInSec());
 	if (!SetDlgItemText(hDlg, IDC_RECONNECT_PAUSE, text_str.c_str())) {
