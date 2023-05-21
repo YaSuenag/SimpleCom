@@ -18,6 +18,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <codecvt>
 
 #ifdef _UNICODE
 typedef std::wstring TString;

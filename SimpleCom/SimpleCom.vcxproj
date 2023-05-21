@@ -93,6 +93,7 @@
       <ConformanceMode>true</ConformanceMode>
       <UseFullPaths>false</UseFullPaths>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -109,6 +110,7 @@
       <ConformanceMode>true</ConformanceMode>
       <UseFullPaths>false</UseFullPaths>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,6 +133,7 @@
       <ConformanceMode>true</ConformanceMode>
       <UseFullPaths>false</UseFullPaths>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,6 +155,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

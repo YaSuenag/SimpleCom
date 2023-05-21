@@ -43,6 +43,33 @@ namespace SimpleCom {
 		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 	};
 
+	class CommandlineOptionBase {
+	protected:
+		LPCTSTR _commandline_option;
+
+	public:
+		CommandlineOptionBase(LPCTSTR option) : _commandline_option(option) {}
+		~CommandlineOptionBase() {}
+
+		LPCTSTR GetCommandlineOption() { return _commandline_option;  }
+		virtual bool need_arguments() = 0;
+		virtual void set_from_arg(LPCTSTR arg) = 0;
+	};
+
+	template <typename T> class CommandlineOption : public CommandlineOptionBase {
+	private:
+		T _value;
+
+	public:
+		CommandlineOption(LPCTSTR option, T default_val) : CommandlineOptionBase(option), _value(default_val) {}
+		~CommandlineOption() {}
+		void set(T new_value) { _value = new_value; }
+		T get() { return _value; }
+
+		bool need_arguments() { return !std::is_same<T, bool>::value; }
+        void set_from_arg(LPCTSTR arg);
+	};
+
 	/*
 	 * This class shows setup dialog box for serial connection.
 	 * The caller can retrieve serial configuration which the user sets on dialog box as `LPDCB`.
@@ -51,18 +78,20 @@ namespace SimpleCom {
 	{
 	private:
 		TString     _port;
-		DWORD       _baud_rate;
-		BYTE        _byte_size;
-		Parity      _parity;
-		StopBits    _stop_bits;
-		FlowControl _flow_control;
-		bool        _use_utf8;
-		bool        _show_dialog;
-		int         _wait_device_period;
+		CommandlineOption<DWORD>        _baud_rate;
+		CommandlineOption<BYTE>         _byte_size;
+		CommandlineOption<Parity&>      _parity;
+		CommandlineOption<StopBits&>    _stop_bits;
+		CommandlineOption<FlowControl&> _flow_control;
+		CommandlineOption<bool>         _use_utf8;
+		CommandlineOption<bool>         _show_dialog;
+		CommandlineOption<int>          _wait_device_period;
+		CommandlineOption<bool>         _auto_reconnect;
+		CommandlineOption<int>          _auto_reconnect_pause_in_sec;
+		CommandlineOption<int>          _auto_reconnect_timeout_in_sec;
 		SerialDeviceScanner _scanner;
-		bool        _auto_reconnect;
-		int         _auto_reconnect_pause_in_sec;
-		int         _auto_reconnect_timeout_in_sec;
+
+		std::map<TString, CommandlineOptionBase*> _options;
 
 	public:
 		SerialSetup();
@@ -77,91 +106,95 @@ namespace SimpleCom {
 		}
 
 		inline void SetBaudRate(const DWORD baud_rate) {
-			_baud_rate = baud_rate;
+			_baud_rate.set(baud_rate);
 		}
 
 		inline DWORD GetBaudRate() {
-			return _baud_rate;
+			return _baud_rate.get();
 		}
 
 		inline void SetByteSize(const BYTE byte_size) {
-			_byte_size = byte_size;
+			_byte_size.set(byte_size);
 		}
 
 		inline BYTE GetByteSize() {
-			return _byte_size;
+			return _byte_size.get();
 		}
 
 		inline void SetParity(Parity& parity) {
-			_parity = parity;
+			_parity.set(parity);
 		}
 
 		inline Parity& GetParity() {
-			return _parity;
+			return _parity.get();
 		}
 
 		inline void SetStopBits(StopBits& stop_bits) {
-			_stop_bits = stop_bits;
+			_stop_bits.set(stop_bits);
 		}
 
 		inline StopBits& GetStopBits() {
-			return _stop_bits;
+			return _stop_bits.get();
 		}
 
 		inline void SetFlowControl(FlowControl& flow_control) {
-			_flow_control = flow_control;
+			_flow_control.set(flow_control);
 		}
 
 		inline FlowControl& GetFlowControl() {
-			return _flow_control;
+			return _flow_control.get();
 		}
 
 		inline void SetUseUTF8(bool enabled) {
-			_use_utf8 = enabled;
+			_use_utf8.set(enabled);
 		}
 
 		inline bool GetUseUTF8() {
-			return _use_utf8;
+			return _use_utf8.get();
 		}
 
 		inline void SetShowDialog(bool value) {
-			_show_dialog = value;
+			_show_dialog.set(value);
 		}
 
 		inline bool IsShowDialog() {
-			return _show_dialog;
+			return _show_dialog.get();
 		}
 
 		inline int GetWaitDevicePeriod() {
-			return _wait_device_period;
+			return _wait_device_period.get();
 		}
 
 		inline void SetAutoReconnect(bool enabled) {
-			_auto_reconnect = enabled;
+			_auto_reconnect.set(enabled);
 		}
 
 		inline bool GetAutoReconnect() {
-			return _auto_reconnect;
+			return _auto_reconnect.get();
 		}
 
 		inline void SetAutoReconnectPauseInSec(int sec) {
-			_auto_reconnect_pause_in_sec = sec;
+			_auto_reconnect_pause_in_sec.set(sec);
 		}
 
 		inline int GetAutoReconnectPauseInSec() {
-			return _auto_reconnect_pause_in_sec;
+			return _auto_reconnect_pause_in_sec.get();
 		}
 
 		inline void SetAutoReconnectTimeoutInSec(int sec) {
-			_auto_reconnect_timeout_in_sec = sec;
+			_auto_reconnect_timeout_in_sec.set(sec);
 		}
 
 		inline int GetAutoReconnectTimeoutInSec() {
-			return _auto_reconnect_timeout_in_sec;
+			return _auto_reconnect_timeout_in_sec.get();
 		}
 
 		inline SerialDeviceScanner& GetDeviceScanner() {
 			return _scanner;
+		}
+
+		template <typename T> CommandlineOption<T> GetOption() {
+			return _baud_rate;
 		}
 
 		bool ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept;

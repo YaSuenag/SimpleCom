@@ -51,21 +51,97 @@ static constexpr SimpleCom::StopBits TWO{ TWOSTOPBITS, _T("2") };
 static constexpr SimpleCom::StopBits stopbits[] = { ONE, ONE5, TWO };
 
 
-SimpleCom::SerialSetup::SerialSetup() : _port(),
-										_baud_rate(115200),
-										_byte_size(8),
-										_parity(const_cast<Parity&>(parities[0])), // NO__PARITY
-										_stop_bits(const_cast<StopBits&>(stopbits[0])), // ONE
-										_flow_control(const_cast<FlowControl&>(flowctrls[0])), // NONE
-										_use_utf8(false),
-										_show_dialog(false),
-										_wait_device_period(0),
-										_scanner(),
-	                                    _auto_reconnect(false),
-	                                    _auto_reconnect_pause_in_sec(3),
-	                                    _auto_reconnect_timeout_in_sec(120)
+// default option parser for integer types
+template<typename T> void SimpleCom::CommandlineOption<T>::set_from_arg(LPCTSTR arg) {
+	size_t idx;
+	_value = std::stoi(arg, &idx);
+	if (arg[idx] != 0) {
+		throw std::invalid_argument("Could not convert to integer");
+	}
+}
+
+void SimpleCom::CommandlineOption<bool>::set_from_arg(LPCTSTR arg) {
+	_value = true;
+}
+
+void SimpleCom::CommandlineOption<SimpleCom::Parity&>::set_from_arg(LPCTSTR arg) {
+	if (_tcscmp(_T("none"), arg) == 0) {
+		_value = const_cast<Parity&>(NO_PARITY);
+	}
+	else if (_tcscmp(_T("odd"), arg) == 0) {
+		_value = const_cast<Parity&>(ODD_PARITY);
+	}
+	else if (_tcscmp(_T("even"), arg) == 0) {
+		_value = const_cast<Parity&>(EVEN_PARITY);
+	}
+	else if (_tcscmp(_T("mark"), arg) == 0) {
+		_value = const_cast<Parity&>(MARK_PARITY);
+	}
+	else if (_tcscmp(_T("space"), arg) == 0) {
+		_value = const_cast<Parity&>(SPACE_PARITY);
+	}
+	else {
+		throw std::invalid_argument("Parity: unknown argument");
+	}
+}
+
+void SimpleCom::CommandlineOption<SimpleCom::StopBits&>::set_from_arg(LPCTSTR arg) {
+	if (_tcscmp(_T("1"), arg) == 0) {
+		_value = const_cast<StopBits&>(ONE);
+	}
+	else if (_tcscmp(_T("1.5"), arg) == 0) {
+		_value = const_cast<StopBits&>(ONE5);
+	}
+	else if (_tcscmp(_T("2"), arg) == 0) {
+		_value = const_cast<StopBits&>(TWO);
+	}
+	else {
+		throw std::invalid_argument("StopBits: unknown argument");
+	}
+}
+
+void SimpleCom::CommandlineOption<SimpleCom::FlowControl&>::set_from_arg(LPCTSTR arg) {
+	if (_tcscmp(_T("none"), arg) == 0) {
+		_value = const_cast<FlowControl&>(NONE);
+	}
+	else if (_tcscmp(_T("hardware"), arg) == 0) {
+		_value = const_cast<FlowControl&>(HARDWARE);
+	}
+	else if (_tcscmp(_T("software"), arg) == 0) {
+		_value = const_cast<FlowControl&>(SOFTWARE);
+	}
+	else {
+		throw std::invalid_argument("FlowControl: unknown argument");
+	}
+}
+
+SimpleCom::SerialSetup::SerialSetup() :
+	_port(),
+	_baud_rate(_T("--baud-rate"), 115200),
+	_byte_size(_T("--byte-size"), 8),
+	_parity(_T("--parity"), const_cast<Parity&>(parities[0])), // NO__PARITY
+	_stop_bits(_T("--stop-bits"), const_cast<StopBits&>(stopbits[0])), // ONE
+	_flow_control(_T("--flow-control"), const_cast<FlowControl&>(flowctrls[0])), // NONE
+	_use_utf8(_T("--utf8"), false),
+	_show_dialog(_T("--show-dialog"), false),
+	_wait_device_period(_T("--wait-serial-device"), 0),
+	_auto_reconnect(_T("--auto-reconnect"), false),
+	_auto_reconnect_pause_in_sec(_T("--auto-reconnect-pause"), 3),
+	_auto_reconnect_timeout_in_sec(_T("--auto-reconnect-timeout"), 120),
+	_scanner(),
+	_options()
 {
-	// Do nothing
+	_options[_baud_rate.GetCommandlineOption()] = &_baud_rate;
+	_options[_byte_size.GetCommandlineOption()] = &_byte_size;
+	_options[_parity.GetCommandlineOption()] = &_parity;
+	_options[_stop_bits.GetCommandlineOption()] = &_stop_bits;
+	_options[_flow_control.GetCommandlineOption()] = &_flow_control;
+	_options[_use_utf8.GetCommandlineOption()] = &_use_utf8;
+	_options[_show_dialog.GetCommandlineOption()] = &_show_dialog;
+	_options[_wait_device_period.GetCommandlineOption()] = &_wait_device_period;
+	_options[_auto_reconnect.GetCommandlineOption()] = &_auto_reconnect;
+	_options[_auto_reconnect_pause_in_sec.GetCommandlineOption()] = &_auto_reconnect_pause_in_sec;
+	_options[_auto_reconnect_timeout_in_sec.GetCommandlineOption()] = &_auto_reconnect_timeout_in_sec;
 }
 
 
@@ -306,138 +382,28 @@ bool SimpleCom::SerialSetup::ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noe
  * Parse command line arguments, and set them to this instance.
  */
 void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
-	int i = 1;
-	for (; i < argc; i++) {
-		if (_tcscmp(_T("--show-dialog"), argv[i]) == 0) {
-			_show_dialog = true;
-		}
-		else if (_tcscmp(_T("--utf8"), argv[i]) == 0) {
-			_use_utf8 = true;
-		}
-		else if (_tcscmp(_T("--auto-reconnect"), argv[i]) == 0) {
-			_auto_reconnect = true;
-		}
-		else if (_tcsncmp(_T("--"), argv[i], 2) == 0) {
-			if ((i + 1) == argc) {
-				throw SerialSetupException(_T("command line argument"), _T("Insufficient command line arguments"));
-			}
-			else if (_tcscmp(_T("--baud-rate"), argv[i]) == 0) {
-				try {
-					size_t idx;
-					LPCTSTR str = argv[++i];
-					_baud_rate = std::stoi(str, &idx);
-					if (str[idx] != 0) {
-						throw std::invalid_argument("--baud-rate");
+	for (int i = 1; i < argc; i++) {
+		if (_tcsncmp(_T("--"), argv[i], 2) == 0) {
+			auto itr = _options.find(argv[i]);
+			if (itr != _options.end()) {
+				CommandlineOptionBase* opt = itr->second;
+				if (opt->need_arguments()) {
+					if (++i == argc) {
+						throw SerialSetupException(_T("command line argument"), _T("Insufficient command line arguments"));
 					}
-				}
-				catch (...) {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --baud-rate"));
-				}
-			}
-			else if (_tcscmp(_T("--byte-size"), argv[i]) == 0) {
-				try {
-					size_t idx;
-					LPCTSTR str = argv[++i];
-					_byte_size = std::stoi(str, &idx);
-					if (str[idx] != 0) {
-						throw std::invalid_argument("--byte-size");
+					try {
+						opt->set_from_arg(argv[i]);
 					}
-				}
-				catch (...) {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --byte-size"));
-				}
-			}
-			else if (_tcscmp(_T("--parity"), argv[i]) == 0) {
-				LPCTSTR parity_val = argv[++i];
-				if (_tcscmp(_T("none"), parity_val) == 0) {
-					_parity = const_cast<Parity&>(NO_PARITY);
-				}
-				else if (_tcscmp(_T("odd"), parity_val) == 0) {
-					_parity = const_cast<Parity&>(ODD_PARITY);
-				}
-				else if (_tcscmp(_T("even"), parity_val) == 0) {
-					_parity = const_cast<Parity&>(EVEN_PARITY);
-				}
-				else if (_tcscmp(_T("mark"), parity_val) == 0) {
-					_parity = const_cast<Parity&>(MARK_PARITY);
-				}
-				else if (_tcscmp(_T("space"), parity_val) == 0) {
-					_parity = const_cast<Parity&>(SPACE_PARITY);
+					catch (const std::invalid_argument& e) {
+						// Only ASCII chars should be converted to wchar, so we can ignore deprecation since C++17.
+						// "/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING" has been added to command line option in project properties.
+						std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+						throw SerialSetupException(_T("command line argument"), conv.from_bytes(e.what()).c_str());
+					}
 				}
 				else {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --parity"));
-				}
-			}
-			else if (_tcscmp(_T("--stop-bits"), argv[i]) == 0) {
-				LPCTSTR sb_val = argv[++i];
-				if (_tcscmp(_T("1"), sb_val) == 0) {
-					_stop_bits = const_cast<StopBits&>(ONE);
-				}
-				else if (_tcscmp(_T("1.5"), sb_val) == 0) {
-					_stop_bits = const_cast<StopBits&>(ONE5);
-				}
-				else if (_tcscmp(_T("2"), sb_val) == 0) {
-					_stop_bits = const_cast<StopBits&>(TWO);
-				}
-				else {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --stop-bits"));
-				}
-			}
-			else if (_tcscmp(_T("--flow-control"), argv[i]) == 0) {
-				LPCTSTR fc_val = argv[++i];
-				if (_tcscmp(_T("none"), fc_val) == 0) {
-					_flow_control = const_cast<FlowControl&>(NONE);
-				}
-				else if (_tcscmp(_T("hardware"), fc_val) == 0) {
-					_flow_control = const_cast<FlowControl&>(HARDWARE);
-				}
-				else if (_tcscmp(_T("software"), fc_val) == 0) {
-					_flow_control = const_cast<FlowControl&>(SOFTWARE);
-				}
-				else {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --flow-control"));
-				}
-			}
-			else if (_tcscmp(_T("--wait-serial-device"), argv[i]) == 0) {
-				try {
-					size_t idx;
-					LPCTSTR str = argv[++i];
-					_wait_device_period = std::stoi(str, &idx);
-					if (str[idx] != 0) {
-						throw std::invalid_argument("--wait-serial-device");
-					}
-					if (_wait_device_period < 1) {
-						throw std::invalid_argument("--wait-serial-device");
-					}
-				}
-				catch (...) {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --wait-serial-device"));
-				}
-			}
-			else if (_tcscmp(_T("--auto-reconnect-pause"), argv[i]) == 0) {
-				try {
-					size_t idx;
-					LPCTSTR str = argv[++i];
-					_auto_reconnect_pause_in_sec = std::stoi(str, &idx);
-					if (str[idx] != 0) {
-						throw std::invalid_argument("--auto-reconnect-pause");
-					}
-				}
-				catch (...) {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --auto-reconnect-pause"));
-				}
-			}
-			else if (_tcscmp(_T("--auto-reconnect-timeout"), argv[i]) == 0) {
-				try {
-					size_t idx;
-					LPCTSTR str = argv[++i];
-					_auto_reconnect_timeout_in_sec = std::stoi(str, &idx);
-					if (str[idx] != 0) {
-						throw std::invalid_argument("--auto-reconnect-timeout");
-					}
-				}
-				catch (...) {
-					throw SerialSetupException(_T("command line argument"), _T("Invalid argument: --auto-reconnect-timeout"));
+					// This should be bool type, should set to true, and it expects not to throw any exceptions.
+					opt->set_from_arg(nullptr);
 				}
 			}
 			else {
@@ -450,12 +416,12 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 				SetPort(argv[i]);
 			}
 			else {
-				throw SerialSetupException(_T("command line argument"), _T("Unknown serial port"));
+				throw SerialSetupException(_T("command line argument (unknown)"), argv[i]);
 			}
 		}
 	}
 
-	if (!_show_dialog && _port.empty()) {
+	if (!_show_dialog.get() && _port.empty()) {
 		throw SerialSetupException(_T("command line argument"), _T("Serial port is not specified"));
 	}
 }
@@ -467,18 +433,18 @@ void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 	ZeroMemory(dcb, sizeof(DCB));
 	dcb->DCBlength = sizeof(DCB);
 
-	dcb->BaudRate = _baud_rate;
+	dcb->BaudRate = _baud_rate.get();
 	dcb->fBinary = TRUE;
-	dcb->fParity = _parity != NO_PARITY;
-	dcb->Parity = _parity;
+	dcb->fParity = _parity.get() != NO_PARITY;
+	dcb->Parity = _parity.get();
 	dcb->fDtrControl = DTR_CONTROL_ENABLE;
 	dcb->fRtsControl = RTS_CONTROL_ENABLE;
 
-	if (_flow_control == HARDWARE) {
+	if (_flow_control.get() == HARDWARE) {
 		dcb->fOutxCtsFlow = TRUE;
 		dcb->fRtsControl = RTS_CONTROL_HANDSHAKE;
 	}
-	else if (_flow_control == SOFTWARE) {
+	else if (_flow_control.get() == SOFTWARE) {
 		dcb->fOutX = TRUE;
 		dcb->fInX = TRUE;
 		dcb->XonLim = 2048;
@@ -487,6 +453,6 @@ void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 		dcb->XoffChar = 0x13;
 	}
 
-	dcb->ByteSize = _byte_size;
-	dcb->StopBits = _stop_bits;
+	dcb->ByteSize = _byte_size.get();
+	dcb->StopBits = _stop_bits.get();
 }
