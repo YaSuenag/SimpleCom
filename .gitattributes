@@ -61,4 +61,4 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
-*.rc diff working-tree-encoding=UTF-16
+*.rc diff working-tree-encoding=UTF-16LE-BOM eol=CRLF
