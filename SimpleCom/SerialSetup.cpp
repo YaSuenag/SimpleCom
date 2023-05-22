@@ -115,19 +115,41 @@ void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR 
 	}
 }
 
+#ifdef _UNICODE
+#define COUT std::wcout
+#else
+#define COUT std::cout
+#endif
+
+void SimpleCom::CommandlineOption<SimpleCom::HelpSwitch>::set_from_arg(LPCTSTR arg) {
+	COUT << R"(
+Usage:
+  SimpleCom.exe <options> <COM port>
+
+Options:)" << std::endl;
+
+	for (auto itr = _setup->_options.begin(); itr != _setup->_options.end(); itr++) {
+		auto opt = itr->second;
+		COUT << _T("   ") << opt->GetCommandlineOption() << _T(" ") << opt->GetArgs() << std::endl;
+		COUT << _T("   \t") << opt->GetDescription() << std::endl;
+	}
+	ExitProcess(100);
+}
+
 SimpleCom::SerialSetup::SerialSetup() :
 	_port(),
-	_baud_rate(_T("--baud-rate"), 115200),
-	_byte_size(_T("--byte-size"), 8),
-	_parity(_T("--parity"), const_cast<Parity&>(parities[0])), // NO__PARITY
-	_stop_bits(_T("--stop-bits"), const_cast<StopBits&>(stopbits[0])), // ONE
-	_flow_control(_T("--flow-control"), const_cast<FlowControl&>(flowctrls[0])), // NONE
-	_use_utf8(_T("--utf8"), false),
-	_show_dialog(_T("--show-dialog"), false),
-	_wait_device_period(_T("--wait-serial-device"), 0),
-	_auto_reconnect(_T("--auto-reconnect"), false),
-	_auto_reconnect_pause_in_sec(_T("--auto-reconnect-pause"), 3),
-	_auto_reconnect_timeout_in_sec(_T("--auto-reconnect-timeout"), 120),
+	_baud_rate(this, _T("--baud-rate"), _T("[num]"), _T("Baud rate"), 115200),
+	_byte_size(this, _T("--byte-size"), _T("[num]"), _T("Byte size"), 8),
+	_parity(this, _T("--parity"), _T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(parities[0])), // NO__PARITY
+	_stop_bits(this, _T("--stop-bits"), _T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(stopbits[0])), // ONE
+	_flow_control(this, _T("--flow-control"), _T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(flowctrls[0])), // NONE
+	_use_utf8(this, _T("--utf8"), _T(""), _T("Use UTF-8 code page"), false),
+	_show_dialog(this, _T("--show-dialog"), _T(""), _T("Show setup dialog"), false),
+	_wait_device_period(this, _T("--wait-serial-device"), _T("[num]"), _T("Seconds to wait for serial device"), 0),
+	_auto_reconnect(this, _T("--auto-reconnect"), _T(""), _T("Reconnect to peripheral automatically"), false),
+	_auto_reconnect_pause_in_sec(this, _T("--auto-reconnect-pause"), _T("[num]"), _T("Pause time in seconds before reconnecting"), 3),
+	_auto_reconnect_timeout_in_sec(this, _T("--auto-reconnect-timeout"), _T("[num]"), _T("Reconnect timeout"), 120),
+	_help(this, _T("--help"), _T(""), _T("Show this help message"), {false}),
 	_scanner(),
 	_options()
 {
@@ -142,6 +164,7 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_options[_auto_reconnect.GetCommandlineOption()] = &_auto_reconnect;
 	_options[_auto_reconnect_pause_in_sec.GetCommandlineOption()] = &_auto_reconnect_pause_in_sec;
 	_options[_auto_reconnect_timeout_in_sec.GetCommandlineOption()] = &_auto_reconnect_timeout_in_sec;
+	_options[_help.GetCommandlineOption()] = &_help;
 }
 
 

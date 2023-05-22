@@ -32,6 +32,7 @@ Console app for serial connection.
 | `--auto-reconnect` | false | Reconnect to peripheral automatically when serial session is disconnected. |
 | `--auto-reconnect-pause [num]` | 3 | Pause time in seconds before reconnecting to peripheral. |
 | `--auto-reconnect-timeout [num]` | 120 | Reconnect timeout |
+| `--help` | - | Show help message |
 
 # How to build
 

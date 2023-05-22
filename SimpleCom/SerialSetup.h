@@ -43,15 +43,27 @@ namespace SimpleCom {
 		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 	};
 
+	/* Type for using CommandlineOption for "--help" */
+	typedef struct { bool dummy; } HelpSwitch;
+
+	/* Forward declaration */
+	class SerialSetup;
+
 	class CommandlineOptionBase {
 	protected:
+		SerialSetup* _setup;
 		LPCTSTR _commandline_option;
+		LPCTSTR _args;
+		LPCTSTR _description;
 
 	public:
-		CommandlineOptionBase(LPCTSTR option) : _commandline_option(option) {}
+		CommandlineOptionBase(SerialSetup* setup, LPCTSTR option, LPCTSTR args, LPCTSTR description) : _setup(setup), _commandline_option(option), _args(args), _description(description) {}
 		~CommandlineOptionBase() {}
 
 		LPCTSTR GetCommandlineOption() { return _commandline_option;  }
+		LPCTSTR GetArgs() { return _args; }
+		LPCTSTR GetDescription() { return _description; }
+
 		virtual bool need_arguments() = 0;
 		virtual void set_from_arg(LPCTSTR arg) = 0;
 	};
@@ -61,12 +73,12 @@ namespace SimpleCom {
 		T _value;
 
 	public:
-		CommandlineOption(LPCTSTR option, T default_val) : CommandlineOptionBase(option), _value(default_val) {}
+		CommandlineOption(SerialSetup* setup, LPCTSTR option, LPCTSTR args, LPCTSTR description, T default_val) : CommandlineOptionBase(setup, option, args, description), _value(default_val) {}
 		~CommandlineOption() {}
 		void set(T new_value) { _value = new_value; }
 		T get() { return _value; }
 
-		bool need_arguments() { return !std::is_same<T, bool>::value; }
+		bool need_arguments() { return !std::is_same<T, bool>::value && !std::is_same<T, HelpSwitch>::value; }
         void set_from_arg(LPCTSTR arg);
 	};
 
@@ -89,8 +101,10 @@ namespace SimpleCom {
 		CommandlineOption<bool>        _auto_reconnect;
 		CommandlineOption<int>         _auto_reconnect_pause_in_sec;
 		CommandlineOption<int>         _auto_reconnect_timeout_in_sec;
+		CommandlineOption<HelpSwitch>  _help;
 		SerialDeviceScanner _scanner;
 
+		friend class CommandlineOption<HelpSwitch>;
 		std::map<TString, CommandlineOptionBase*> _options;
 
 	public:
