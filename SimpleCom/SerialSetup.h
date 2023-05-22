@@ -78,17 +78,17 @@ namespace SimpleCom {
 	{
 	private:
 		TString     _port;
-		CommandlineOption<DWORD>        _baud_rate;
-		CommandlineOption<BYTE>         _byte_size;
-		CommandlineOption<Parity&>      _parity;
-		CommandlineOption<StopBits&>    _stop_bits;
-		CommandlineOption<FlowControl&> _flow_control;
-		CommandlineOption<bool>         _use_utf8;
-		CommandlineOption<bool>         _show_dialog;
-		CommandlineOption<int>          _wait_device_period;
-		CommandlineOption<bool>         _auto_reconnect;
-		CommandlineOption<int>          _auto_reconnect_pause_in_sec;
-		CommandlineOption<int>          _auto_reconnect_timeout_in_sec;
+		CommandlineOption<DWORD>       _baud_rate;
+		CommandlineOption<BYTE>        _byte_size;
+		CommandlineOption<Parity>      _parity;
+		CommandlineOption<StopBits>    _stop_bits;
+		CommandlineOption<FlowControl> _flow_control;
+		CommandlineOption<bool>        _use_utf8;
+		CommandlineOption<bool>        _show_dialog;
+		CommandlineOption<int>         _wait_device_period;
+		CommandlineOption<bool>        _auto_reconnect;
+		CommandlineOption<int>         _auto_reconnect_pause_in_sec;
+		CommandlineOption<int>         _auto_reconnect_timeout_in_sec;
 		SerialDeviceScanner _scanner;
 
 		std::map<TString, CommandlineOptionBase*> _options;
@@ -125,7 +125,7 @@ namespace SimpleCom {
 			_parity.set(parity);
 		}
 
-		inline Parity& GetParity() {
+		inline Parity GetParity() {
 			return _parity.get();
 		}
 
@@ -133,7 +133,7 @@ namespace SimpleCom {
 			_stop_bits.set(stop_bits);
 		}
 
-		inline StopBits& GetStopBits() {
+		inline StopBits GetStopBits() {
 			return _stop_bits.get();
 		}
 
@@ -141,7 +141,7 @@ namespace SimpleCom {
 			_flow_control.set(flow_control);
 		}
 
-		inline FlowControl& GetFlowControl() {
+		inline FlowControl GetFlowControl() {
 			return _flow_control.get();
 		}
 

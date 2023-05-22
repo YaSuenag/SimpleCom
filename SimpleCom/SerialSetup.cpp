@@ -64,7 +64,7 @@ void SimpleCom::CommandlineOption<bool>::set_from_arg(LPCTSTR arg) {
 	_value = true;
 }
 
-void SimpleCom::CommandlineOption<SimpleCom::Parity&>::set_from_arg(LPCTSTR arg) {
+void SimpleCom::CommandlineOption<SimpleCom::Parity>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("none"), arg) == 0) {
 		_value = const_cast<Parity&>(NO_PARITY);
 	}
@@ -85,7 +85,7 @@ void SimpleCom::CommandlineOption<SimpleCom::Parity&>::set_from_arg(LPCTSTR arg)
 	}
 }
 
-void SimpleCom::CommandlineOption<SimpleCom::StopBits&>::set_from_arg(LPCTSTR arg) {
+void SimpleCom::CommandlineOption<SimpleCom::StopBits>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("1"), arg) == 0) {
 		_value = const_cast<StopBits&>(ONE);
 	}
@@ -100,7 +100,7 @@ void SimpleCom::CommandlineOption<SimpleCom::StopBits&>::set_from_arg(LPCTSTR ar
 	}
 }
 
-void SimpleCom::CommandlineOption<SimpleCom::FlowControl&>::set_from_arg(LPCTSTR arg) {
+void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("none"), arg) == 0) {
 		_value = const_cast<FlowControl&>(NONE);
 	}
