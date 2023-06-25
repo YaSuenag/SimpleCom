@@ -1,0 +1,11 @@
+[Unit]
+Description=TTY resizer for SimpleCom
+Documentation=https://github.com/YaSuenag/SimpleCom/blob/master/tty-resizer/README.md
+Requires=getty.target
+
+[Service]
+EnvironmentFile=/etc/default/tty-resizer
+ExecStart=/usr/local/sbin/tty-resizer $DEVFILE
+
+[Install]
+WantedBy=getty.target
