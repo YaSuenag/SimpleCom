@@ -1,26 +1,14 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
 name: "CodeQL"
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev/tty-resizer ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ master ]
 
 jobs:
-  analyze:
-    name: Analyze
+  analyze-simplecom:
     runs-on: windows-2022
     permissions:
       actions: read
@@ -67,6 +55,33 @@ jobs:
       name: Build CSharp
       run: |
         msbuild InstallerCustomActions\InstallerCustomActions.csproj -property:Configuration=Debug
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  analyze-tty-resizer:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+        queries: security-extended,security-and-quality
+
+    - name: Build TTY Resizer
+      run: make -C tty-resizer
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
