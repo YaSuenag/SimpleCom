@@ -144,6 +144,7 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_stop_bits(this, _T("--stop-bits"), _T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(stopbits[0])), // ONE
 	_flow_control(this, _T("--flow-control"), _T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(flowctrls[0])), // NONE
 	_use_utf8(this, _T("--utf8"), _T(""), _T("Use UTF-8 code page"), false),
+	_use_tty_resizer(this, _T("--tty-resizer"), _T(""), _T("Use TTY Resizer"), false),
 	_show_dialog(this, _T("--show-dialog"), _T(""), _T("Show setup dialog"), false),
 	_wait_device_period(this, _T("--wait-serial-device"), _T("[num]"), _T("Seconds to wait for serial device"), 0),
 	_auto_reconnect(this, _T("--auto-reconnect"), _T(""), _T("Reconnect to peripheral automatically"), false),
@@ -159,6 +160,7 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_options[_stop_bits.GetCommandlineOption()] = &_stop_bits;
 	_options[_flow_control.GetCommandlineOption()] = &_flow_control;
 	_options[_use_utf8.GetCommandlineOption()] = &_use_utf8;
+	_options[_use_tty_resizer.GetCommandlineOption()] = &_use_tty_resizer;
 	_options[_show_dialog.GetCommandlineOption()] = &_show_dialog;
 	_options[_wait_device_period.GetCommandlineOption()] = &_wait_device_period;
 	_options[_auto_reconnect.GetCommandlineOption()] = &_auto_reconnect;
@@ -263,6 +265,12 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	}
 	SendMessage(hCheckUTF8, BM_SETCHECK, setup->GetUseUTF8() ? BST_CHECKED : BST_UNCHECKED, 0);
 
+	HWND hCheckTTYResizer = GetDlgItem(hDlg, IDC_CHECK_TTY_RESIZER);
+	if (hCheckTTYResizer == nullptr) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_TTY_RESIZER)"));
+	}
+	SendMessage(hCheckTTYResizer, BM_SETCHECK, setup->GetUseTTYResizer() ? BST_CHECKED : BST_UNCHECKED, 0);
+
 	HWND hCheckAutoReconnect = GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT);
 	if (hCheckAutoReconnect == nullptr) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_AUTO_RECONNECT)"));
@@ -336,6 +344,9 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 
 	auto checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_UTF8), BM_GETCHECK, 0, 0);
 	setup->SetUseUTF8(checked == BST_CHECKED);
+
+	checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_TTY_RESIZER), BM_GETCHECK, 0, 0);
+	setup->SetUseTTYResizer(checked == BST_CHECKED);
 
 	checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT), BM_GETCHECK, 0, 0);
 	setup->SetAutoReconnect(checked == BST_CHECKED);

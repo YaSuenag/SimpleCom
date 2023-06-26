@@ -24,6 +24,7 @@ Console app for serial connection.
 | `--show-dialog` | false | Show setup dialog even if command line arguments are passed. |
 | `--wait-serial-device [seconds]` | 0 (disable) | Wait specified seconds for serial devices are available. |
 | `--utf8` | false | Use UTF-8 code page on SimpleCom console. |
+| `--tty-resizer` | false | Use TTY resizer. See [README.md in TTY resizer](tty-resizer/README.md). |
 | `--baud-rate [num]` | 115200 | Baud rate |
 | `--byte-size [num]` | 8 | Byte size |
 | `--parity [val]` | `none` | Set one of following values as a parity: <ul><li>none</li><li>odd</li><li>even</li><li>mark</li><li>space</li></ul> |

@@ -135,7 +135,7 @@ int _tmain(int argc, LPCTSTR argv[])
 
 	try {
 		while (true) {
-			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, std::get<0>(std_handles), std::get<1>(std_handles));
+			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, std::get<0>(std_handles), std::get<1>(std_handles), setup.GetUseTTYResizer());
 			bool exited = conn.DoSession();
 
 			if (setup.GetAutoReconnect() && !exited) {

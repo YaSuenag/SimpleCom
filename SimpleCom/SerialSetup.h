@@ -96,6 +96,7 @@ namespace SimpleCom {
 		CommandlineOption<StopBits>    _stop_bits;
 		CommandlineOption<FlowControl> _flow_control;
 		CommandlineOption<bool>        _use_utf8;
+		CommandlineOption<bool>        _use_tty_resizer;
 		CommandlineOption<bool>        _show_dialog;
 		CommandlineOption<int>         _wait_device_period;
 		CommandlineOption<bool>        _auto_reconnect;
@@ -165,6 +166,14 @@ namespace SimpleCom {
 
 		inline bool GetUseUTF8() {
 			return _use_utf8.get();
+		}
+
+		inline void SetUseTTYResizer(bool enabled) {
+			_use_tty_resizer.set(enabled);
+		}
+
+		inline bool GetUseTTYResizer() {
+			return _use_tty_resizer.get();
 		}
 
 		inline void SetShowDialog(bool value) {
