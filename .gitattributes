@@ -62,3 +62,4 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 *.rc diff working-tree-encoding=UTF-16LE-BOM eol=CRLF
+SimpleCom/resource.h diff working-tree-encoding=UTF-16LE-BOM eol=CRLF
