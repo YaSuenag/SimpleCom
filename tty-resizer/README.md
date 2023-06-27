@@ -7,6 +7,8 @@ TTY Resizer would resize specified console when SimpleCom sends resize request.
 
 ## Requirements
 
+Linux kernel v6.0 or later
+
 ### Fedora
 
 * make
