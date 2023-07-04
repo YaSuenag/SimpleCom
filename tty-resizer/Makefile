@@ -1,10 +1,12 @@
 .PHONY: clean
 
 TARGET = tty-resizer
+KERNEL_DEVEL_ROOT = /usr/src/kernels/$(shell uname -r)
 CC := clang
 BPFTOOL := bpftool
 
 CFLAGS = -g -O2 -Wall
+CPPFLAGS = -I$(KERNEL_DEVEL_ROOT)
 LDFLAGS = -lbpf
 
 all: tty-resizer.skel.h
@@ -12,16 +14,13 @@ all: tty-resizer.skel.h
 	$(CC) $(CFLAGS) tty-resizer.o -o $(TARGET) $(LDFLAGS)
 
 tty-resizer.skel.h: tty-resizer.bpf.o
-	$(BPFTOOL) gen skeleton tty-resizer.bpf.o > $@
+	$(BPFTOOL) gen skeleton $< > $@
 
-tty-resizer.bpf.o: vmlinux.h
-	$(CC) $(CFLAGS) -target bpf -D__TARGET_ARCH_x86 -c tty-resizer.bpf.c -o $@
-
-vmlinux.h:
-	$(BPFTOOL) btf dump file /sys/kernel/btf/vmlinux format c > $@
+tty-resizer.bpf.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) -target bpf -D__TARGET_ARCH_x86 -c tty-resizer.bpf.c -o $@
 
 clean:
-	$(RM) $(TARGET) *.o *.skel.h vmlinux.h
+	$(RM) $(TARGET) *.o *.skel.h
 
 install: $(TARGET)
 	cp -f $(TARGET) /usr/local/sbin/

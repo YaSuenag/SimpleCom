@@ -15,6 +15,7 @@ Linux kernel v6.0 or later
 * clang
 * libbpf-devel
 * bpftool
+* kernel-devel
 
 ### Ubuntu
 
