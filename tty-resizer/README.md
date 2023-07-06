@@ -24,6 +24,12 @@ Linux kernel v6.0 or later
 * libbpf-dev
 * linux-tools-common
 
+On distros which does not provide vmlinux.h like Ubuntu, you have to generate it via [bpftool btf dump](https://manpages.ubuntu.com/manpages/focal/man8/bpftool-btf.8.html).
+
+```
+bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
+```
+
 ## Build
 
 ```bash

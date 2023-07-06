@@ -17,7 +17,7 @@ tty-resizer.skel.h: tty-resizer.bpf.o
 	$(BPFTOOL) gen skeleton $< > $@
 
 tty-resizer.bpf.o:
-	$(CC) $(CFLAGS) $(CPPFLAGS) -target bpf -D__TARGET_ARCH_x86 -c tty-resizer.bpf.c -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -target bpf -c tty-resizer.bpf.c -o $@
 
 clean:
 	$(RM) $(TARGET) *.o *.skel.h
