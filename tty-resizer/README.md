@@ -69,11 +69,11 @@ sudo systemd enable tty-resizer
 Send following format command to TTY console:
 
 ```
-[0xF4][Row];[Col]t
+[0x05][Row];[Col]t
 ```
 
 Both `Row` and `Col` are unsigned short.
 
-When `0xF4` is received in tty-resizer, subsequent chars are captured in tty-resizer, and they will not propagate to real TTY. `t` is terminator, then capture mode in tty-resizer is finished, and subsequent chars are propagated to real TTY, and `TIOCSWINSZ` ioctl would be issued to the specified TTY. `c` means "cancel" for tty-resizer, then capture mode will be finished, and happens nothing.
+When `0x05` (ENQ) is received in tty-resizer, subsequent chars are captured in tty-resizer, and they will not propagate to real TTY. `t` is terminator, then capture mode in tty-resizer is finished, and subsequent chars are propagated to real TTY, and `TIOCSWINSZ` ioctl would be issued to the specified TTY. `c` means "cancel" for tty-resizer, then capture mode will be finished, and happens nothing.
 
 0-9 and `;`, `t`, `c` is valid chars on capture mode. Capture mode will be aborted when other char is received - it would be treated as `c`.

