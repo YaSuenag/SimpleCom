@@ -32,11 +32,12 @@ typedef struct {
 } TStdOutRedirectorParam;
 
 
-SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut) :
+SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer) :
 	_device(device),
 	_parent_hwnd(hwnd),
 	_hStdIn(hStdIn),
-	_hStdOut(hStdOut)
+	_hStdOut(hStdOut),
+	_useTTYResizer(useTTYResizer)
 {
 	CopyMemory(&_dcb, dcb, sizeof(_dcb));
 }
@@ -196,6 +197,12 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 						if (ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, hTermEvent)) {
 							return true;
 						}
+					}
+					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
+						char buf[buf_sz];
+						buf[0] = '\x05';
+						int len = snprintf(&buf[1], buf_sz, "%d;%dt", inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X);
+						writer.PutData(buf, len + 1); // "len" excludes the marker (0x05)
 					}
 				}
 

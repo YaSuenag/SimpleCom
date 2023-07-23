@@ -32,13 +32,14 @@ namespace SimpleCom {
 		HWND _parent_hwnd;
 		HANDLE _hStdIn;
 		HANDLE _hStdOut;
+		bool _useTTYResizer;
 
 		void InitSerialPort(const HANDLE hSerial);
 		bool ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer, const HANDLE hTermEvent);
 		bool StdInRedirector(const HANDLE hSerial, const HANDLE hTermEvent);
 
 	public:
-		SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut);
+		SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer);
 		virtual ~SerialConnection() {};
 
 		bool DoSession();

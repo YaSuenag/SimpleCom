@@ -41,6 +41,7 @@ namespace SimpleCom {
 		virtual ~SerialPortWriter();
 
 		void Put(const char c);
+		void PutData(const char* data, const int len);
 		void WriteAsync();
 
 		inline void Shutdown() {

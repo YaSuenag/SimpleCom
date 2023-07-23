@@ -80,3 +80,15 @@ void SimpleCom::SerialPortWriter::Put(const char c) {
 	}
 
 }
+
+void SimpleCom::SerialPortWriter::PutData(const char *data, const int len) {
+	WriteAsync();
+
+	ResetEvent(_overlapped.hEvent);
+	BOOL result = WriteFile(_handle, data, len, nullptr, &_overlapped);
+	DWORD last_error = GetLastError();
+
+	if (!result && (last_error != ERROR_IO_PENDING)) {
+		throw WinAPIException(last_error, _T("SimpleCom"));
+	}
+}
