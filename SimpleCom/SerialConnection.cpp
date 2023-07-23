@@ -199,12 +199,10 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 						}
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
-						char buf[11];
-						buf[0] = '\xF4';
-						int len = snprintf(&buf[1], 10, "%d;%dt", inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X);
-						if (len < 10) {
-							writer.PutData(buf, len);
-						}
+						char buf[buf_sz];
+						buf[0] = '\x05';
+						int len = snprintf(&buf[1], buf_sz, "%d;%dt", inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X);
+						writer.PutData(buf, len + 1); // "len" excludes the marker (0x05)
 					}
 				}
 
