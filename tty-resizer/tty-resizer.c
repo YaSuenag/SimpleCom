@@ -30,6 +30,7 @@ int on_char_received(void *ctx, void *data, size_t size){
     if(sscanf(ringbuf_received, "%hu;%hu", &ws.ws_row, &ws.ws_col) == 2){
       if(ioctl(tty_fd, TIOCSWINSZ, &ws) == -1){
         perror("ioctl");
+        _exit(-200);
       }
     }
     ringbuf_received_idx = 0;

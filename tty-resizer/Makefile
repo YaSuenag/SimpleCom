@@ -25,8 +25,7 @@ clean:
 install: $(TARGET)
 	cp -f $(TARGET) /usr/local/sbin/
 	cp -f tty-resizer.service /usr/lib/systemd/system/
-	echo 'DEVFILE=/dev/ttyS0' > /etc/default/tty-resizer
 
 uninstall:
 	systemctl disable tty-resizer
-	$(RM) /usr/lib/systemd/system/tty-resizer.service /etc/default/tty-resizer /usr/local/sbin/$(TARGET)
+	$(RM) /usr/lib/systemd/system/tty-resizer.service /usr/local/sbin/$(TARGET)

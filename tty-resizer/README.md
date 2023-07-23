@@ -9,6 +9,8 @@ TTY Resizer would resize specified console when SimpleCom sends resize request.
 
 Linux kernel v6.0 or later
 
+v6.4 or later is required when you run TTY Resizer on AArch64 Linux.
+
 ### Fedora
 
 * make
@@ -46,7 +48,6 @@ sudo make install
 
 * /usr/local/sbin/tty-resizer
 * /usr/lib/systemd/system/tty-resizer.service
-* /etc/default/tty-resizer
 
 # How it works
 
@@ -58,10 +59,17 @@ Add `-v` if you want to see the log from libbpf.
 
 ## Install systemd unit file
 
-Specify TTY device file to /etc/default/tty-resizer (/dev/ttyS0 is set by default), then run `systemd enable` in below:
+Specify TTY device file to tty-resizer.service (/dev/ttyGS0 is set by default), then run `systemd enable` in below:
 
 ```bash
-sudo systemd enable tty-resizer
+sudo systemctl enable tty-resizer
+```
+
+If you want to change the device, run following commands:
+
+```bash
+sudo systemctl daemon-reaload
+sudo systemctl restart tty-resizer
 ```
 
 ## Send command
