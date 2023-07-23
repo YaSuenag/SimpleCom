@@ -85,3 +85,15 @@ Both `Row` and `Col` are unsigned short.
 When `0x05` (ENQ) is received in tty-resizer, subsequent chars are captured in tty-resizer, and they will not propagate to real TTY. `t` is terminator, then capture mode in tty-resizer is finished, and subsequent chars are propagated to real TTY, and `TIOCSWINSZ` ioctl would be issued to the specified TTY. `c` means "cancel" for tty-resizer, then capture mode will be finished, and happens nothing.
 
 0-9 and `;`, `t`, `c` is valid chars on capture mode. Capture mode will be aborted when other char is received - it would be treated as `c`.
+
+# Known issue
+
+Some strings for resizing might be shown on your serial console in earlier phase (especially just after the boot) like following:
+
+```
+[root@raspberry-pi ~]# 30;122t31;122t31;123t31;124t
+```
+
+You should wait few seconds if you start tty-resizer from `tty-resizer.service` when you encounter this problem.
+
+This might be caused that `ioctl` to TTY is failed. So `tty-resizer.service` in this source would restart when the issue happens to avoid it. Then it will work fine.
