@@ -10,7 +10,7 @@ CPPFLAGS = -I$(KERNEL_DEVEL_ROOT) -I../common
 LDFLAGS = -lbpf
 
 all: tty-resizer.skel.h
-	$(CC) $(CFLAGS) -c tty-resizer.c -o tty-resizer.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c tty-resizer.c -o tty-resizer.o
 	$(CC) $(CFLAGS) tty-resizer.o -o $(TARGET) $(LDFLAGS)
 
 tty-resizer.skel.h: tty-resizer.bpf.o

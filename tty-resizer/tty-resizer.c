@@ -46,7 +46,7 @@ int on_char_received(void *ctx, void *data, size_t size){
   ch = *(char *)data;
   if(ch == 't'){
     ringbuf_received[ringbuf_received_idx] = '\0';
-    if(sscanf(ringbuf_received, "%hu%c%hu", &ws.ws_row, RESIZER_SEPARATOR, &ws.ws_col) == 2){
+    if(sscanf(ringbuf_received, "%hu" RESIZER_SEPARATOR "%hu", &ws.ws_row, &ws.ws_col) == 2){
       if(ioctl(tty_fd, TIOCSWINSZ, &ws) == -1){
         perror("ioctl");
         _exit(-200);

@@ -58,7 +58,7 @@ int BPF_PROG(tty_read, struct kiocb *iocb, struct iov_iter *to, int ret){
       flags = BPF_RB_FORCE_WAKEUP;
       send_to_buffer = false;
     }
-    else if((ch != RESIZER_SEPARATOR) && (('0' > ch) || ('9' < ch))){
+    else if((ch != *RESIZER_SEPARATOR) && (('0' > ch) || ('9' < ch))){
       /* handles invalid chars */
       ch = RESIZER_CANCEL_MARKER;
       flags = BPF_RB_FORCE_WAKEUP;

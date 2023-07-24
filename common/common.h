@@ -22,7 +22,7 @@
 #define RESIZER_START_MARKER  '\x05'
 #define RESIZER_END_MARKER    't'
 #define RESIZER_CANCEL_MARKER 'c'
-#define RESIZER_SEPARATOR     ';'
+#define RESIZER_SEPARATOR     ";"
 
 /* marker (0x05) + ushort (up to 65535) + separator (;) + ushort + end marker */
 #define RINGBUF_SZ 13
