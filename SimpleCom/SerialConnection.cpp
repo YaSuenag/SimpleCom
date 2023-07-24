@@ -20,6 +20,7 @@
 #include "SerialConnection.h"
 #include "util.h"
 #include "debug.h"
+#include "../common/common.h"
 
 static constexpr int buf_sz = 256;
 
@@ -199,10 +200,9 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 						}
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
-						char buf[buf_sz];
-						buf[0] = '\x05';
-						int len = snprintf(&buf[1], buf_sz, "%d;%dt", inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X);
-						writer.PutData(buf, len + 1); // "len" excludes the marker (0x05)
+						char buf[RINGBUF_SZ];
+						int len = snprintf(buf, sizeof(buf), "%c%d" RESIZER_SEPARATOR "%d%c", RESIZER_START_MARKER, inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X, RESIZER_END_MARKER);
+						writer.PutData(buf, len);
 					}
 				}
 

@@ -21,7 +21,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_core_read.h>
 
-#define RINGBUF_SZ 10
+#include "common.h"
 
 char LICENSE[] SEC("license") = "GPL";
 
@@ -46,7 +46,7 @@ int BPF_PROG(tty_read, struct kiocb *iocb, struct iov_iter *to, int ret){
 
   ubuf = BPF_CORE_READ(to, ubuf);
   bpf_probe_read_user(&ch, 1, ubuf);
-  if(ch == '\x05'){
+  if(ch == RESIZER_START_MARKER){
     send_to_buffer = true;
 
     ch = '\0';
@@ -54,13 +54,13 @@ int BPF_PROG(tty_read, struct kiocb *iocb, struct iov_iter *to, int ret){
   }
   else if(send_to_buffer){
     u64 flags = BPF_RB_NO_WAKEUP;
-    if(ch == 't'){
+    if(ch == RESIZER_END_MARKER){
       flags = BPF_RB_FORCE_WAKEUP;
       send_to_buffer = false;
     }
-    else if((ch != ';') && (('0' > ch) || ('9' < ch))){
+    else if((ch != *RESIZER_SEPARATOR) && (('0' > ch) || ('9' < ch))){
       /* handles invalid chars */
-      ch = 'c';
+      ch = RESIZER_CANCEL_MARKER;
       flags = BPF_RB_FORCE_WAKEUP;
       send_to_buffer = false;
     }
