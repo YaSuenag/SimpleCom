@@ -183,6 +183,7 @@
     <ClCompile Include="WinAPIException.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\common.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="EnumValue.h" />
     <ClInclude Include="resource.h" />

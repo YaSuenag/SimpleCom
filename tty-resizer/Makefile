@@ -6,7 +6,7 @@ CC := clang
 BPFTOOL := bpftool
 
 CFLAGS = -g -O2 -Wall
-CPPFLAGS = -I$(KERNEL_DEVEL_ROOT)
+CPPFLAGS = -I$(KERNEL_DEVEL_ROOT) -I../common
 LDFLAGS = -lbpf
 
 all: tty-resizer.skel.h
