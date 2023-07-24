@@ -2,7 +2,7 @@
 *.msi
 dist/*
 
-tty-resizer
+tty-resizer/tty-resizer
 *.o
 *.skel.h
 vmlinux.h
