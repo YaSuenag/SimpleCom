@@ -201,7 +201,7 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
 						char buf[RINGBUF_SZ];
-						int len = snprintf(buf, sizeof(buf), "%c%d%c%d%c", RESIZER_START_MARKER, inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, RESIZER_SEPARATOR, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X, RESIZER_END_MARKER);
+						int len = snprintf(buf, sizeof(buf), "%c%d" RESIZER_SEPARATOR "%d%c", RESIZER_START_MARKER, inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X, RESIZER_END_MARKER);
 						writer.PutData(buf, len);
 					}
 				}
