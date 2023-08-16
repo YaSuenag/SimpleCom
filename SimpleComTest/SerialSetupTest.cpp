@@ -31,6 +31,86 @@ namespace SimpleComTest
 
 	public:
 
+		TEST_METHOD(DWORDCommandLineOption) {
+			SimpleCom::CommandlineOption<DWORD> opt(_T("[num]"), _T("test"), 100);
+
+			// Default
+			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::AreEqual(static_cast<DWORD>(100), opt.get());
+
+			// Setter
+			opt.set(200);
+			Assert::AreEqual(static_cast<DWORD>(200), opt.get());
+
+			// Set from command line argument
+			opt.set_from_arg(_T("300"));
+			Assert::AreEqual(static_cast<DWORD>(300), opt.get());
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("1a")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BYTECommandLineOption) {
+			SimpleCom::CommandlineOption<BYTE> opt(_T("[num]"), _T("test"), 1);
+
+			// Default
+			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::AreEqual(static_cast<BYTE>(1), opt.get());
+
+			// Setter
+			opt.set(2);
+			Assert::AreEqual(static_cast<BYTE>(2), opt.get());
+
+			// Set from command line argument
+			opt.set_from_arg(_T("3"));
+			Assert::AreEqual(static_cast<BYTE>(3), opt.get());
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("a")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(IntCommandLineOption) {
+			SimpleCom::CommandlineOption<int> opt(_T("[num]"), _T("test"), 100);
+
+			// Default
+			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::AreEqual(static_cast<int>(100), opt.get());
+
+			// Setter
+			opt.set(200);
+			Assert::AreEqual(static_cast<int>(200), opt.get());
+
+			// Set from command line argument
+			opt.set_from_arg(_T("300"));
+			Assert::AreEqual(static_cast<int>(300), opt.get());
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("1a")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BoolCommandLineOption) {
+			SimpleCom::CommandlineOption<bool> opt(_T(""), _T("test"), false);
+
+			// Default
+			Assert::AreEqual(_T(""), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(false, opt.need_arguments());
+			Assert::AreEqual(false, opt.get());
+
+			// Setter
+			opt.set(true);
+			Assert::AreEqual(true, opt.get());
+		}
+
 		TEST_METHOD(DefaultValueTest)
 		{
 			// Default values are for Raspberry Pi
