@@ -43,24 +43,18 @@ namespace SimpleCom {
 		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
 	};
 
-	/* Type for using CommandlineOption for "--help" */
-	typedef struct { bool dummy; } HelpSwitch;
-
 	/* Forward declaration */
 	class SerialSetup;
 
 	class CommandlineOptionBase {
 	protected:
-		SerialSetup* _setup;
-		LPCTSTR _commandline_option;
 		LPCTSTR _args;
 		LPCTSTR _description;
 
 	public:
-		CommandlineOptionBase(SerialSetup* setup, LPCTSTR option, LPCTSTR args, LPCTSTR description) : _setup(setup), _commandline_option(option), _args(args), _description(description) {}
-		~CommandlineOptionBase() {}
+		CommandlineOptionBase( LPCTSTR args, LPCTSTR description) : _args(args), _description(description) {}
+		virtual ~CommandlineOptionBase() {}
 
-		LPCTSTR GetCommandlineOption() { return _commandline_option;  }
 		LPCTSTR GetArgs() { return _args; }
 		LPCTSTR GetDescription() { return _description; }
 
@@ -73,13 +67,25 @@ namespace SimpleCom {
 		T _value;
 
 	public:
-		CommandlineOption(SerialSetup* setup, LPCTSTR option, LPCTSTR args, LPCTSTR description, T default_val) : CommandlineOptionBase(setup, option, args, description), _value(default_val) {}
-		~CommandlineOption() {}
+		CommandlineOption(LPCTSTR args, LPCTSTR description, T default_val) : CommandlineOptionBase(args, description), _value(default_val) {}
+		virtual ~CommandlineOption() {}
 		void set(T new_value) { _value = new_value; }
 		T get() { return _value; }
 
-		bool need_arguments() { return !std::is_same<T, bool>::value && !std::is_same<T, HelpSwitch>::value; }
-        void set_from_arg(LPCTSTR arg);
+		virtual bool need_arguments() { return !std::is_same<T, bool>::value; }
+        virtual void set_from_arg(LPCTSTR arg);
+	};
+
+	class CommandlineHelpOption : public CommandlineOption<bool> {
+	private:
+		std::map<TString, CommandlineOptionBase*> *_options;
+
+	public:
+		CommandlineHelpOption(std::map<TString, CommandlineOptionBase*> *options) : CommandlineOption<bool>(_T(""), _T("Show this help message"), false), _options(options) {};
+		virtual ~CommandlineHelpOption() {};
+
+		bool need_arguments() { return false; }
+		void set_from_arg(LPCTSTR arg);
 	};
 
 	/*
@@ -90,22 +96,7 @@ namespace SimpleCom {
 	{
 	private:
 		TString     _port;
-		CommandlineOption<DWORD>       _baud_rate;
-		CommandlineOption<BYTE>        _byte_size;
-		CommandlineOption<Parity>      _parity;
-		CommandlineOption<StopBits>    _stop_bits;
-		CommandlineOption<FlowControl> _flow_control;
-		CommandlineOption<bool>        _use_utf8;
-		CommandlineOption<bool>        _use_tty_resizer;
-		CommandlineOption<bool>        _show_dialog;
-		CommandlineOption<int>         _wait_device_period;
-		CommandlineOption<bool>        _auto_reconnect;
-		CommandlineOption<int>         _auto_reconnect_pause_in_sec;
-		CommandlineOption<int>         _auto_reconnect_timeout_in_sec;
-		CommandlineOption<HelpSwitch>  _help;
 		SerialDeviceScanner _scanner;
-
-		friend class CommandlineOption<HelpSwitch>;
 		std::map<TString, CommandlineOptionBase*> _options;
 
 	public:
@@ -121,103 +112,99 @@ namespace SimpleCom {
 		}
 
 		inline void SetBaudRate(const DWORD baud_rate) {
-			_baud_rate.set(baud_rate);
+			static_cast<CommandlineOption<DWORD>*>(_options[_T("--baud-rate")])->set(baud_rate);
 		}
 
 		inline DWORD GetBaudRate() {
-			return _baud_rate.get();
+			return static_cast<CommandlineOption<DWORD>*>(_options[_T("--baud-rate")])->get();
 		}
 
 		inline void SetByteSize(const BYTE byte_size) {
-			_byte_size.set(byte_size);
+			static_cast<CommandlineOption<BYTE>*>(_options[_T("--byte-size")])->set(byte_size);
 		}
 
 		inline BYTE GetByteSize() {
-			return _byte_size.get();
+			return static_cast<CommandlineOption<BYTE>*>(_options[_T("--byte-size")])->get();
 		}
 
 		inline void SetParity(Parity& parity) {
-			_parity.set(parity);
+			static_cast<CommandlineOption<Parity>*>(_options[_T("--parity")])->set(parity);
 		}
 
 		inline Parity GetParity() {
-			return _parity.get();
+			return static_cast<CommandlineOption<Parity>*>(_options[_T("--parity")])->get();
 		}
 
 		inline void SetStopBits(StopBits& stop_bits) {
-			_stop_bits.set(stop_bits);
+			static_cast<CommandlineOption<StopBits>*>(_options[_T("--stop-bits")])->set(stop_bits);
 		}
 
 		inline StopBits GetStopBits() {
-			return _stop_bits.get();
+			return static_cast<CommandlineOption<StopBits>*>(_options[_T("--stop-bits")])->get();
 		}
 
 		inline void SetFlowControl(FlowControl& flow_control) {
-			_flow_control.set(flow_control);
+			static_cast<CommandlineOption<FlowControl>*>(_options[_T("--flow-control")])->set(flow_control);
 		}
 
 		inline FlowControl GetFlowControl() {
-			return _flow_control.get();
+			return static_cast<CommandlineOption<FlowControl>*>(_options[_T("--flow-control")])->get();
 		}
 
 		inline void SetUseUTF8(bool enabled) {
-			_use_utf8.set(enabled);
+			static_cast<CommandlineOption<bool>*>(_options[_T("--utf8")])->set(enabled);
 		}
 
 		inline bool GetUseUTF8() {
-			return _use_utf8.get();
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--utf8")])->get();
 		}
 
 		inline void SetUseTTYResizer(bool enabled) {
-			_use_tty_resizer.set(enabled);
+			static_cast<CommandlineOption<bool>*>(_options[_T("--tty-resizer")])->set(enabled);
 		}
 
 		inline bool GetUseTTYResizer() {
-			return _use_tty_resizer.get();
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--tty-resizer")])->get();
 		}
 
 		inline void SetShowDialog(bool value) {
-			_show_dialog.set(value);
+			static_cast<CommandlineOption<bool>*>(_options[_T("--show-dialog")])->set(value);
 		}
 
 		inline bool IsShowDialog() {
-			return _show_dialog.get();
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--show-dialog")])->get();
 		}
 
 		inline int GetWaitDevicePeriod() {
-			return _wait_device_period.get();
+			return static_cast<CommandlineOption<int>*>(_options[_T("--wait-serial-device")])->get();
 		}
 
 		inline void SetAutoReconnect(bool enabled) {
-			_auto_reconnect.set(enabled);
+			static_cast<CommandlineOption<bool>*>(_options[_T("--auto-reconnect")])->set(enabled);
 		}
 
 		inline bool GetAutoReconnect() {
-			return _auto_reconnect.get();
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--auto-reconnect")])->get();
 		}
 
 		inline void SetAutoReconnectPauseInSec(int sec) {
-			_auto_reconnect_pause_in_sec.set(sec);
+			static_cast<CommandlineOption<int>*>(_options[_T("--auto-reconnect-pause")])->set(sec);
 		}
 
 		inline int GetAutoReconnectPauseInSec() {
-			return _auto_reconnect_pause_in_sec.get();
+			return static_cast<CommandlineOption<int>*>(_options[_T("--auto-reconnect-pause")])->get();
 		}
 
 		inline void SetAutoReconnectTimeoutInSec(int sec) {
-			_auto_reconnect_timeout_in_sec.set(sec);
+			static_cast<CommandlineOption<int>*>(_options[_T("--auto-reconnect-timeout")])->set(sec);
 		}
 
 		inline int GetAutoReconnectTimeoutInSec() {
-			return _auto_reconnect_timeout_in_sec.get();
+			return static_cast<CommandlineOption<int>*>(_options[_T("--auto-reconnect-timeout")])->get();
 		}
 
 		inline SerialDeviceScanner& GetDeviceScanner() {
 			return _scanner;
-		}
-
-		template <typename T> CommandlineOption<T> GetOption() {
-			return _baud_rate;
 		}
 
 		bool ShowConfigureDialog(HINSTANCE hInst, HWND hWnd) noexcept;

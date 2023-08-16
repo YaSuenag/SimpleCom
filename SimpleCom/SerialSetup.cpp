@@ -121,16 +121,16 @@ void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR 
 #define COUT std::cout
 #endif
 
-void SimpleCom::CommandlineOption<SimpleCom::HelpSwitch>::set_from_arg(LPCTSTR arg) {
+void SimpleCom::CommandlineHelpOption::set_from_arg(LPCTSTR arg) {
 	COUT << R"(
 Usage:
   SimpleCom.exe <options> <COM port>
 
 Options:)" << std::endl;
 
-	for (auto itr = _setup->_options.begin(); itr != _setup->_options.end(); itr++) {
+	for (auto itr = _options->begin(); itr != _options->end(); itr++) {
 		auto opt = itr->second;
-		COUT << _T("   ") << opt->GetCommandlineOption() << _T(" ") << opt->GetArgs() << std::endl;
+		COUT << _T("   ") << itr->first << _T(" ") << opt->GetArgs() << std::endl;
 		COUT << _T("   \t") << opt->GetDescription() << std::endl;
 	}
 	ExitProcess(100);
@@ -138,41 +138,30 @@ Options:)" << std::endl;
 
 SimpleCom::SerialSetup::SerialSetup() :
 	_port(),
-	_baud_rate(this, _T("--baud-rate"), _T("[num]"), _T("Baud rate"), 115200),
-	_byte_size(this, _T("--byte-size"), _T("[num]"), _T("Byte size"), 8),
-	_parity(this, _T("--parity"), _T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(parities[0])), // NO__PARITY
-	_stop_bits(this, _T("--stop-bits"), _T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(stopbits[0])), // ONE
-	_flow_control(this, _T("--flow-control"), _T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(flowctrls[0])), // NONE
-	_use_utf8(this, _T("--utf8"), _T(""), _T("Use UTF-8 code page"), false),
-	_use_tty_resizer(this, _T("--tty-resizer"), _T(""), _T("Use TTY Resizer"), false),
-	_show_dialog(this, _T("--show-dialog"), _T(""), _T("Show setup dialog"), false),
-	_wait_device_period(this, _T("--wait-serial-device"), _T("[num]"), _T("Seconds to wait for serial device"), 0),
-	_auto_reconnect(this, _T("--auto-reconnect"), _T(""), _T("Reconnect to peripheral automatically"), false),
-	_auto_reconnect_pause_in_sec(this, _T("--auto-reconnect-pause"), _T("[num]"), _T("Pause time in seconds before reconnecting"), 3),
-	_auto_reconnect_timeout_in_sec(this, _T("--auto-reconnect-timeout"), _T("[num]"), _T("Reconnect timeout"), 120),
-	_help(this, _T("--help"), _T(""), _T("Show this help message"), {false}),
 	_scanner(),
 	_options()
 {
-	_options[_baud_rate.GetCommandlineOption()] = &_baud_rate;
-	_options[_byte_size.GetCommandlineOption()] = &_byte_size;
-	_options[_parity.GetCommandlineOption()] = &_parity;
-	_options[_stop_bits.GetCommandlineOption()] = &_stop_bits;
-	_options[_flow_control.GetCommandlineOption()] = &_flow_control;
-	_options[_use_utf8.GetCommandlineOption()] = &_use_utf8;
-	_options[_use_tty_resizer.GetCommandlineOption()] = &_use_tty_resizer;
-	_options[_show_dialog.GetCommandlineOption()] = &_show_dialog;
-	_options[_wait_device_period.GetCommandlineOption()] = &_wait_device_period;
-	_options[_auto_reconnect.GetCommandlineOption()] = &_auto_reconnect;
-	_options[_auto_reconnect_pause_in_sec.GetCommandlineOption()] = &_auto_reconnect_pause_in_sec;
-	_options[_auto_reconnect_timeout_in_sec.GetCommandlineOption()] = &_auto_reconnect_timeout_in_sec;
-	_options[_help.GetCommandlineOption()] = &_help;
+	_options[_T("--baud-rate")] = new CommandlineOption<DWORD>(_T("[num]"), _T("Baud rate"), 115200);
+	_options[_T("--byte-size")] = new CommandlineOption<BYTE>(_T("[num]"), _T("Byte size"), 8);
+	_options[_T("--parity")] = new CommandlineOption<Parity>(_T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(parities[0])); // NO_PARITY
+	_options[_T("--stop-bits")] = new CommandlineOption<StopBits>(_T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(stopbits[0])); // ONE
+	_options[_T("--flow-control")] = new CommandlineOption<FlowControl>(_T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(flowctrls[0])); // NONE
+	_options[_T("--utf8")] = new CommandlineOption<bool>(_T(""), _T("Use UTF-8 code page"), false);
+	_options[_T("--tty-resizer")] = new CommandlineOption<bool>(_T(""), _T("Use TTY Resizer"), false);
+	_options[_T("--show-dialog")] = new CommandlineOption<bool>(_T(""), _T("Show setup dialog"), false);
+	_options[_T("--wait-serial-device")] = new CommandlineOption<int>(_T("[num]"), _T("Seconds to wait for serial device"), 0);
+	_options[_T("--auto-reconnect")] = new CommandlineOption<bool>(_T(""), _T("Reconnect to peripheral automatically"), false);
+	_options[_T("--auto-reconnect-pause")] = new CommandlineOption<int>(_T("[num]"), _T("Pause time in seconds before reconnecting"), 3);
+	_options[_T("--auto-reconnect-timeout")] = new CommandlineOption<int>(_T("[num]"), _T("Reconnect timeout"), 120);
+	_options[_T("--help")] = new CommandlineHelpOption(&_options);
 }
 
 
 SimpleCom::SerialSetup::~SerialSetup()
 {
-	// Do nothing
+	for (auto itr = _options.begin(); itr != _options.end(); itr++) {
+		delete itr->second;
+	}
 }
 
 static void AddStringToComboBox(HWND hCombo, TString str) {
@@ -455,7 +444,7 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 		}
 	}
 
-	if (!_show_dialog.get() && _port.empty()) {
+	if (!IsShowDialog() && _port.empty()) {
 		throw SerialSetupException(_T("command line argument"), _T("Serial port is not specified"));
 	}
 }
@@ -467,18 +456,18 @@ void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 	ZeroMemory(dcb, sizeof(DCB));
 	dcb->DCBlength = sizeof(DCB);
 
-	dcb->BaudRate = _baud_rate.get();
+	dcb->BaudRate = GetBaudRate();
 	dcb->fBinary = TRUE;
-	dcb->fParity = _parity.get() != NO_PARITY;
-	dcb->Parity = _parity.get();
+	dcb->fParity = GetParity() != NO_PARITY;
+	dcb->Parity = GetParity();
 	dcb->fDtrControl = DTR_CONTROL_ENABLE;
 	dcb->fRtsControl = RTS_CONTROL_ENABLE;
 
-	if (_flow_control.get() == HARDWARE) {
+	if (GetFlowControl() == HARDWARE) {
 		dcb->fOutxCtsFlow = TRUE;
 		dcb->fRtsControl = RTS_CONTROL_HANDSHAKE;
 	}
-	else if (_flow_control.get() == SOFTWARE) {
+	else if (GetFlowControl() == SOFTWARE) {
 		dcb->fOutX = TRUE;
 		dcb->fInX = TRUE;
 		dcb->XonLim = 2048;
@@ -487,6 +476,6 @@ void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 		dcb->XoffChar = 0x13;
 	}
 
-	dcb->ByteSize = _byte_size.get();
-	dcb->StopBits = _stop_bits.get();
+	dcb->ByteSize = GetByteSize();
+	dcb->StopBits = GetStopBits();
 }
