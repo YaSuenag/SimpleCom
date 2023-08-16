@@ -1,5 +1,6 @@
 SimpleCom
 ![CodeQL](../../workflows/CodeQL/badge.svg)
+![Unit test](../../workflows/Unit%20test/badge.svg)
 ===================
 
 Console app for serial connection.
