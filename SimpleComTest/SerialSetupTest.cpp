@@ -111,6 +111,88 @@ namespace SimpleComTest
 			Assert::AreEqual(true, opt.get());
 		}
 
+		TEST_METHOD(ParityCommandLineOption) {
+			SimpleCom::CommandlineOption<SimpleCom::Parity> opt(_T("[none|odd|even|mark|space]"), _T("test"), SimpleCom::Parity::NO_PARITY);
+
+			// Default
+			Assert::AreEqual(_T("[none|odd|even|mark|space]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::NO_PARITY);
+
+			// Setter
+			opt.set(SimpleCom::Parity::ODD_PARITY);
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::ODD_PARITY);
+
+			// Set from command line argument
+			opt.set_from_arg(_T("none"));
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::NO_PARITY);
+			opt.set_from_arg(_T("odd"));
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::ODD_PARITY);
+			opt.set_from_arg(_T("even"));
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::EVEN_PARITY);
+			opt.set_from_arg(_T("mark"));
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::MARK_PARITY);
+			opt.set_from_arg(_T("space"));
+			Assert::IsTrue(opt.get() == SimpleCom::Parity::SPACE_PARITY);
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("silver-bullet")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(FlowControlCommandLineOption) {
+			SimpleCom::CommandlineOption<SimpleCom::FlowControl> opt(_T("[none|hardware|software]"), _T("test"), SimpleCom::FlowControl::NONE);
+
+			// Default
+			Assert::AreEqual(_T("[none|hardware|software]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::NONE);
+
+			// Setter
+			opt.set(SimpleCom::FlowControl::HARDWARE);
+			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::HARDWARE);
+
+			// Set from command line argument
+			opt.set_from_arg(_T("none"));
+			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::NONE);
+			opt.set_from_arg(_T("hardware"));
+			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::HARDWARE);
+			opt.set_from_arg(_T("software"));
+			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::SOFTWARE);
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("silver-bullet")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(StopBitsCommandLineOption) {
+			SimpleCom::CommandlineOption<SimpleCom::StopBits> opt(_T("[1|1.5|2]"), _T("test"), SimpleCom::StopBits::ONE);
+
+			// Default
+			Assert::AreEqual(_T("[1|1.5|2]"), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::IsTrue(opt.get() == SimpleCom::StopBits::ONE);
+
+			// Setter
+			opt.set(SimpleCom::StopBits::ONE5);
+			Assert::IsTrue(opt.get() == SimpleCom::StopBits::ONE5);
+
+			// Set from command line argument
+			opt.set_from_arg(_T("1"));
+			Assert::IsTrue(opt.get() == SimpleCom::StopBits::ONE);
+			opt.set_from_arg(_T("1.5"));
+			Assert::IsTrue(opt.get() == SimpleCom::StopBits::ONE5);
+			opt.set_from_arg(_T("2"));
+			Assert::IsTrue(opt.get() == SimpleCom::StopBits::TWO);
+
+			// Invalid command line argument
+			auto test = [&] { opt.set_from_arg(_T("silver-bullet")); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
 		TEST_METHOD(DefaultValueTest)
 		{
 			// Default values are for Raspberry Pi
