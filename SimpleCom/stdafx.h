@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 #include <regex>
 #include <sstream>
 #include <string>

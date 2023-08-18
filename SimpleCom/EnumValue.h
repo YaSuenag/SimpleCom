@@ -20,6 +20,24 @@
 
 #include "stdafx.h"
 
+#define FOR_EACH_PARITY_ENUMS(f) \
+  f(Parity, NO_PARITY,    NOPARITY,    _T("none"))  \
+  f(Parity, ODD_PARITY,   ODDPARITY,   _T("odd"))   \
+  f(Parity, EVEN_PARITY,  EVENPARITY,  _T("even"))  \
+  f(Parity, MARK_PARITY,  MARKPARITY,  _T("mark"))  \
+  f(Parity, SPACE_PARITY, SPACEPARITY, _T("space"))
+
+#define FOR_EACH_FLOWCTL_ENUMS(f) \
+  f(FlowControl, NONE,     0, _T("none"))     \
+  f(FlowControl, HARDWARE, 1, _T("hardware")) \
+  f(FlowControl, SOFTWARE, 2, _T("software"))
+
+#define FOR_EACH_STOPBITS_ENUMS(f) \
+  f(StopBits, ONE,  ONESTOPBIT,   _T("1"))   \
+  f(StopBits, ONE5, ONE5STOPBITS, _T("1.5")) \
+  f(StopBits, TWO,  TWOSTOPBITS,  _T("2"))
+
+
 namespace SimpleCom {
 
 	/*
@@ -40,6 +58,48 @@ namespace SimpleCom {
 		bool operator == (EnumValue& rvalue) { return _value == rvalue._value; };
 
 		inline constexpr LPCTSTR tstr() const noexcept { return _str; };
+	};
+
+	/* Enum for parity */
+	class Parity : public EnumValue {
+	public:
+		constexpr explicit Parity(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
+
+#define DECLARE_ENUM(cls, name, value, str) \
+		static const cls name;
+
+		FOR_EACH_PARITY_ENUMS(DECLARE_ENUM)
+#undef DECLARE_ENUM
+
+		static const std::vector<Parity> values;
+	};
+
+	/* Enum for flow control */
+	class FlowControl : public EnumValue {
+	public:
+		constexpr explicit FlowControl(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
+
+#define DECLARE_ENUM(cls, name, value, str) \
+		static const cls name;
+
+		FOR_EACH_FLOWCTL_ENUMS(DECLARE_ENUM)
+#undef DECLARE_ENUM
+
+		static const std::vector<FlowControl> values;
+	};
+
+	/* Enum for stop bits */
+	class StopBits : public EnumValue {
+	public:
+		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
+
+#define DECLARE_ENUM(cls, name, value, str) \
+		static const cls name;
+
+		FOR_EACH_STOPBITS_ENUMS(DECLARE_ENUM)
+#undef DECLARE_ENUM
+
+		static const std::vector<StopBits> values;
 	};
 
 }

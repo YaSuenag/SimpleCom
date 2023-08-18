@@ -172,6 +172,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="debug.cpp" />
+    <ClCompile Include="EnumValue.cpp" />
     <ClCompile Include="SerialConnection.cpp" />
     <ClCompile Include="SerialDeviceScanner.cpp" />
     <ClCompile Include="SerialPortWriter.cpp" />

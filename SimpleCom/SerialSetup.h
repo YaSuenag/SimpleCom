@@ -25,24 +25,6 @@
 
 namespace SimpleCom {
 
-	/* Enum for parity */
-	class Parity : public EnumValue {
-	public:
-		constexpr explicit Parity(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
-	};
-
-	/* Enum for flow control */
-	class FlowControl : public EnumValue {
-	public:
-		constexpr explicit FlowControl(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
-	};
-
-	/* Enum for stop bits */
-	class StopBits : public EnumValue {
-	public:
-		constexpr explicit StopBits(const int value, LPCTSTR str) noexcept : EnumValue(value, str) {};
-	};
-
 	/* Forward declaration */
 	class SerialSetup;
 

@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -116,7 +116,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -136,7 +136,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -156,7 +156,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

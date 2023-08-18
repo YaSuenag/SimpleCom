@@ -30,27 +30,6 @@
 #endif
 
 
-// Enum setup for parity
-static constexpr SimpleCom::Parity NO_PARITY{ NOPARITY, _T("none") };
-static constexpr SimpleCom::Parity ODD_PARITY{ ODDPARITY, _T("odd") };
-static constexpr SimpleCom::Parity EVEN_PARITY{ EVENPARITY, _T("even") };
-static constexpr SimpleCom::Parity MARK_PARITY{ MARKPARITY, _T("mark") };
-static constexpr SimpleCom::Parity SPACE_PARITY{ SPACEPARITY, _T("space") };
-static constexpr SimpleCom::Parity parities[] = { NO_PARITY, ODD_PARITY, EVEN_PARITY, MARK_PARITY, SPACE_PARITY };
-
-// Enum setup for flow control
-static constexpr SimpleCom::FlowControl NONE{ __COUNTER__, _T("none") };
-static constexpr SimpleCom::FlowControl HARDWARE{ __COUNTER__, _T("hardware") };
-static constexpr SimpleCom::FlowControl SOFTWARE{ __COUNTER__, _T("software") };
-static constexpr SimpleCom::FlowControl flowctrls[] = { NONE, HARDWARE, SOFTWARE };
-
-// Enum setup for stop bits
-static constexpr SimpleCom::StopBits ONE{ ONESTOPBIT, _T("1") };
-static constexpr SimpleCom::StopBits ONE5{ ONE5STOPBITS, _T("1.5") };
-static constexpr SimpleCom::StopBits TWO{ TWOSTOPBITS, _T("2") };
-static constexpr SimpleCom::StopBits stopbits[] = { ONE, ONE5, TWO };
-
-
 // default option parser for integer types
 template<typename T> void SimpleCom::CommandlineOption<T>::set_from_arg(LPCTSTR arg) {
 	size_t idx;
@@ -66,19 +45,19 @@ void SimpleCom::CommandlineOption<bool>::set_from_arg(LPCTSTR arg) {
 
 void SimpleCom::CommandlineOption<SimpleCom::Parity>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("none"), arg) == 0) {
-		_value = const_cast<Parity&>(NO_PARITY);
+		_value = const_cast<Parity&>(Parity::NO_PARITY);
 	}
 	else if (_tcscmp(_T("odd"), arg) == 0) {
-		_value = const_cast<Parity&>(ODD_PARITY);
+		_value = const_cast<Parity&>(Parity::ODD_PARITY);
 	}
 	else if (_tcscmp(_T("even"), arg) == 0) {
-		_value = const_cast<Parity&>(EVEN_PARITY);
+		_value = const_cast<Parity&>(Parity::EVEN_PARITY);
 	}
 	else if (_tcscmp(_T("mark"), arg) == 0) {
-		_value = const_cast<Parity&>(MARK_PARITY);
+		_value = const_cast<Parity&>(Parity::MARK_PARITY);
 	}
 	else if (_tcscmp(_T("space"), arg) == 0) {
-		_value = const_cast<Parity&>(SPACE_PARITY);
+		_value = const_cast<Parity&>(Parity::SPACE_PARITY);
 	}
 	else {
 		throw std::invalid_argument("Parity: unknown argument");
@@ -87,13 +66,13 @@ void SimpleCom::CommandlineOption<SimpleCom::Parity>::set_from_arg(LPCTSTR arg) 
 
 void SimpleCom::CommandlineOption<SimpleCom::StopBits>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("1"), arg) == 0) {
-		_value = const_cast<StopBits&>(ONE);
+		_value = const_cast<StopBits&>(StopBits::ONE);
 	}
 	else if (_tcscmp(_T("1.5"), arg) == 0) {
-		_value = const_cast<StopBits&>(ONE5);
+		_value = const_cast<StopBits&>(StopBits::ONE5);
 	}
 	else if (_tcscmp(_T("2"), arg) == 0) {
-		_value = const_cast<StopBits&>(TWO);
+		_value = const_cast<StopBits&>(StopBits::TWO);
 	}
 	else {
 		throw std::invalid_argument("StopBits: unknown argument");
@@ -102,13 +81,13 @@ void SimpleCom::CommandlineOption<SimpleCom::StopBits>::set_from_arg(LPCTSTR arg
 
 void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR arg) {
 	if (_tcscmp(_T("none"), arg) == 0) {
-		_value = const_cast<FlowControl&>(NONE);
+		_value = const_cast<FlowControl&>(FlowControl::NONE);
 	}
 	else if (_tcscmp(_T("hardware"), arg) == 0) {
-		_value = const_cast<FlowControl&>(HARDWARE);
+		_value = const_cast<FlowControl&>(FlowControl::HARDWARE);
 	}
 	else if (_tcscmp(_T("software"), arg) == 0) {
-		_value = const_cast<FlowControl&>(SOFTWARE);
+		_value = const_cast<FlowControl&>(FlowControl::SOFTWARE);
 	}
 	else {
 		throw std::invalid_argument("FlowControl: unknown argument");
@@ -143,9 +122,9 @@ SimpleCom::SerialSetup::SerialSetup() :
 {
 	_options[_T("--baud-rate")] = new CommandlineOption<DWORD>(_T("[num]"), _T("Baud rate"), 115200);
 	_options[_T("--byte-size")] = new CommandlineOption<BYTE>(_T("[num]"), _T("Byte size"), 8);
-	_options[_T("--parity")] = new CommandlineOption<Parity>(_T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(parities[0])); // NO_PARITY
-	_options[_T("--stop-bits")] = new CommandlineOption<StopBits>(_T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(stopbits[0])); // ONE
-	_options[_T("--flow-control")] = new CommandlineOption<FlowControl>(_T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(flowctrls[0])); // NONE
+	_options[_T("--parity")] = new CommandlineOption<Parity>(_T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(Parity::NO_PARITY));
+	_options[_T("--stop-bits")] = new CommandlineOption<StopBits>(_T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(StopBits::ONE));
+	_options[_T("--flow-control")] = new CommandlineOption<FlowControl>(_T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(FlowControl::NONE));
 	_options[_T("--utf8")] = new CommandlineOption<bool>(_T(""), _T("Use UTF-8 code page"), false);
 	_options[_T("--tty-resizer")] = new CommandlineOption<bool>(_T(""), _T("Use TTY Resizer"), false);
 	_options[_T("--show-dialog")] = new CommandlineOption<bool>(_T(""), _T("Show setup dialog"), false);
@@ -213,10 +192,11 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_PARITY)"));
 	}
 	cb_idx = 0;
-	for (auto& parity : parities) {
+	for (int idx = 0; idx < SimpleCom::Parity::values.size(); idx++) {
+		SimpleCom::Parity parity = SimpleCom::Parity::values[idx];
 		AddStringToComboBox(hComboParity, parity.tstr());
 		if (parity == setup->GetParity()) {
-			cb_idx = &parity - parities;
+			cb_idx = idx;
 		}
 	}
 	SendMessage(hComboParity, CB_SETCURSEL, cb_idx, 0);
@@ -227,10 +207,11 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STOP_BITS)"));
 	}
 	cb_idx = 0;
-	for (auto& stopbit : stopbits) {
+	for (int idx = 0; idx < SimpleCom::StopBits::values.size(); idx++) {
+		SimpleCom::StopBits stopbit = SimpleCom::StopBits::values[idx];
 		AddStringToComboBox(hComboStopBits, stopbit.tstr());
 		if (stopbit == setup->GetStopBits()) {
-			cb_idx = &stopbit - stopbits;
+			cb_idx = idx;
 		}
 	}
 	SendMessage(hComboStopBits, CB_SETCURSEL, cb_idx, 0);
@@ -240,10 +221,11 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_FLOW_CTL)"));
 	}
 	cb_idx = 0;
-	for (auto& flowctl : flowctrls) {
+	for (int idx = 0; idx < SimpleCom::FlowControl::values.size(); idx++) {
+		SimpleCom::FlowControl flowctl = SimpleCom::FlowControl::values[idx];
 		AddStringToComboBox(hComboFlowCtl, flowctl.tstr());
 		if (flowctl == setup->GetFlowControl()) {
-			cb_idx = &flowctl - flowctrls;
+			cb_idx = idx;
 		}
 	}
 	SendMessage(hComboFlowCtl, CB_SETCURSEL, cb_idx, 0);
@@ -317,19 +299,19 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 	if (selected_idx == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_PARITY"));
 	}
-	setup->SetParity(const_cast<SimpleCom::Parity &>(parities[selected_idx]));
+	setup->SetParity(const_cast<SimpleCom::Parity &>(SimpleCom::Parity::values[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_STOP_BITS), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_STOP_BITS"));
 	}
-	setup->SetStopBits(const_cast<SimpleCom::StopBits&>(stopbits[selected_idx]));
+	setup->SetStopBits(const_cast<SimpleCom::StopBits&>(SimpleCom::StopBits::values[selected_idx]));
 
 	selected_idx = static_cast<int>(SendMessage(GetDlgItem(hDlg, IDC_FLOW_CTL), CB_GETCURSEL, 0, 0));
 	if (selected_idx == CB_ERR) {
 		throw SimpleCom::WinAPIException(_T("No item is selected"), _T("IDC_FLOW_CTL"));
 	}
-	setup->SetFlowControl(const_cast<SimpleCom::FlowControl&>(flowctrls[selected_idx]));
+	setup->SetFlowControl(const_cast<SimpleCom::FlowControl&>(SimpleCom::FlowControl::values[selected_idx]));
 
 	auto checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_UTF8), BM_GETCHECK, 0, 0);
 	setup->SetUseUTF8(checked == BST_CHECKED);
@@ -458,16 +440,16 @@ void SimpleCom::SerialSetup::SaveToDCB(LPDCB dcb) noexcept {
 
 	dcb->BaudRate = GetBaudRate();
 	dcb->fBinary = TRUE;
-	dcb->fParity = GetParity() != NO_PARITY;
+	dcb->fParity = GetParity() != SimpleCom::Parity::NO_PARITY;
 	dcb->Parity = GetParity();
 	dcb->fDtrControl = DTR_CONTROL_ENABLE;
 	dcb->fRtsControl = RTS_CONTROL_ENABLE;
 
-	if (GetFlowControl() == HARDWARE) {
+	if (GetFlowControl() == SimpleCom::FlowControl::HARDWARE) {
 		dcb->fOutxCtsFlow = TRUE;
 		dcb->fRtsControl = RTS_CONTROL_HANDSHAKE;
 	}
-	else if (GetFlowControl() == SOFTWARE) {
+	else if (GetFlowControl() == SimpleCom::FlowControl::SOFTWARE) {
 		dcb->fOutX = TRUE;
 		dcb->fInX = TRUE;
 		dcb->XonLim = 2048;
