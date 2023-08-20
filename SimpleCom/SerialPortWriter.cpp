@@ -28,7 +28,7 @@ SimpleCom::SerialPortWriter::SerialPortWriter(const HANDLE handle, DWORD buf_sz)
 
 	_overlapped.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 	if (_overlapped.hEvent == NULL) {
-		throw WinAPIException(GetLastError(), _T("SimpleCom"));
+		throw WinAPIException(GetLastError());
 	}
 
 	_buf_sz = buf_sz;
@@ -62,7 +62,7 @@ void SimpleCom::SerialPortWriter::WriteAsync()
 	DWORD last_error = GetLastError();
 
 	if (!result && (last_error != ERROR_IO_PENDING)) {
-		throw WinAPIException(last_error, _T("SimpleCom"));
+		throw WinAPIException(last_error);
 	}
 
 	_buf_idx = 0;
@@ -89,6 +89,6 @@ void SimpleCom::SerialPortWriter::PutData(const char *data, const int len) {
 	DWORD last_error = GetLastError();
 
 	if (!result && (last_error != ERROR_IO_PENDING)) {
-		throw WinAPIException(last_error, _T("SimpleCom"));
+		throw WinAPIException(last_error);
 	}
 }

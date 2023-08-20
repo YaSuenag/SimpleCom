@@ -190,7 +190,7 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 			DWORD result = WaitForMultipleObjects(sizeof(waiters) / sizeof(HANDLE), waiters, FALSE, INFINITE);
 			if (result == WAIT_OBJECT_0) { // hStdIn
 				if (!ReadConsoleInput(_hStdIn, inputs, sizeof(inputs) / sizeof(INPUT_RECORD), &n_read)) {
-					throw SimpleCom::WinAPIException(GetLastError(), _T("SimpleCom"));
+					throw SimpleCom::WinAPIException(GetLastError());
 				}
 
 				for (DWORD idx = 0; idx < n_read; idx++) {

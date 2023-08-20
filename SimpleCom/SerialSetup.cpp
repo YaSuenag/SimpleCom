@@ -44,54 +44,33 @@ void SimpleCom::CommandlineOption<bool>::set_from_arg(LPCTSTR arg) {
 }
 
 void SimpleCom::CommandlineOption<SimpleCom::Parity>::set_from_arg(LPCTSTR arg) {
-	if (_tcscmp(_T("none"), arg) == 0) {
-		_value = const_cast<Parity&>(Parity::NO_PARITY);
+	for (auto& value : Parity::values) {
+		if (_tcscmp(value.tstr(), arg) == 0) {
+			_value = value;
+			return;
+		}
 	}
-	else if (_tcscmp(_T("odd"), arg) == 0) {
-		_value = const_cast<Parity&>(Parity::ODD_PARITY);
-	}
-	else if (_tcscmp(_T("even"), arg) == 0) {
-		_value = const_cast<Parity&>(Parity::EVEN_PARITY);
-	}
-	else if (_tcscmp(_T("mark"), arg) == 0) {
-		_value = const_cast<Parity&>(Parity::MARK_PARITY);
-	}
-	else if (_tcscmp(_T("space"), arg) == 0) {
-		_value = const_cast<Parity&>(Parity::SPACE_PARITY);
-	}
-	else {
-		throw std::invalid_argument("Parity: unknown argument");
-	}
+	throw std::invalid_argument("Parity: unknown argument");
 }
 
 void SimpleCom::CommandlineOption<SimpleCom::StopBits>::set_from_arg(LPCTSTR arg) {
-	if (_tcscmp(_T("1"), arg) == 0) {
-		_value = const_cast<StopBits&>(StopBits::ONE);
+	for (auto& value : StopBits::values) {
+		if (_tcscmp(value.tstr(), arg) == 0) {
+			_value = value;
+			return;
+		}
 	}
-	else if (_tcscmp(_T("1.5"), arg) == 0) {
-		_value = const_cast<StopBits&>(StopBits::ONE5);
-	}
-	else if (_tcscmp(_T("2"), arg) == 0) {
-		_value = const_cast<StopBits&>(StopBits::TWO);
-	}
-	else {
-		throw std::invalid_argument("StopBits: unknown argument");
-	}
+	throw std::invalid_argument("StopBits: unknown argument");
 }
 
 void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR arg) {
-	if (_tcscmp(_T("none"), arg) == 0) {
-		_value = const_cast<FlowControl&>(FlowControl::NONE);
+	for (auto& value : FlowControl::values) {
+		if (_tcscmp(value.tstr(), arg) == 0) {
+			_value = value;
+			return;
+		}
 	}
-	else if (_tcscmp(_T("hardware"), arg) == 0) {
-		_value = const_cast<FlowControl&>(FlowControl::HARDWARE);
-	}
-	else if (_tcscmp(_T("software"), arg) == 0) {
-		_value = const_cast<FlowControl&>(FlowControl::SOFTWARE);
-	}
-	else {
-		throw std::invalid_argument("FlowControl: unknown argument");
-	}
+	throw std::invalid_argument("FlowControl: unknown argument");
 }
 
 #ifdef _UNICODE
@@ -165,8 +144,8 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_SERIAL_DEVICE)"));
 	}
 	cb_idx = 0;
-	auto devices = setup->GetDeviceScanner().GetDevices();
-	for (auto itr : devices) {
+	auto& devices = setup->GetDeviceScanner().GetDevices();
+	for (auto& itr : devices) {
 		const TString port = itr.first;
 		text_str = port + _T(": ") + itr.second;
 		AddStringToComboBox(hComboSerialDevice, text_str);

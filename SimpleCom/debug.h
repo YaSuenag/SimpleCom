@@ -22,7 +22,7 @@
 
 #define CALL_WINAPI_WITH_DEBUGLOG(func_call, expected, file, line)              \
   if (func_call != expected) {                                                  \
-    SimpleCom::WinAPIException e(GetLastError(), nullptr);                      \
+    SimpleCom::WinAPIException e(GetLastError());                               \
     TStringStream ss;                                                           \
     ss << file << _T(":") << line << _T(": ") << e.GetErrorText() << std::endl; \
     SimpleCom::debug::log(ss.str().c_str());                                    \
