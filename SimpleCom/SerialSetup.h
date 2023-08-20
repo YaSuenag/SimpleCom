@@ -30,14 +30,14 @@ namespace SimpleCom {
 
 	class CommandlineOptionBase {
 	protected:
-		LPCTSTR _args;
+		const TString _args;
 		LPCTSTR _description;
 
 	public:
-		CommandlineOptionBase( LPCTSTR args, LPCTSTR description) : _args(args), _description(description) {}
+		CommandlineOptionBase(const TString args, LPCTSTR description) : _args(args), _description(description) {}
 		virtual ~CommandlineOptionBase() {}
 
-		LPCTSTR GetArgs() { return _args; }
+		const TString& GetArgs() { return _args; }
 		LPCTSTR GetDescription() { return _description; }
 
 		virtual bool need_arguments() = 0;
@@ -49,7 +49,7 @@ namespace SimpleCom {
 		T _value;
 
 	public:
-		CommandlineOption(LPCTSTR args, LPCTSTR description, T default_val) : CommandlineOptionBase(args, description), _value(default_val) {}
+		CommandlineOption(const TString args, LPCTSTR description, T default_val) : CommandlineOptionBase(args, description), _value(default_val) {}
 		virtual ~CommandlineOption() {}
 		void set(T new_value) { _value = new_value; }
 		T get() { return _value; }

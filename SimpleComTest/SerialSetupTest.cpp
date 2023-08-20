@@ -35,7 +35,7 @@ namespace SimpleComTest
 			SimpleCom::CommandlineOption<DWORD> opt(_T("[num]"), _T("test"), 100);
 
 			// Default
-			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[num]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::AreEqual(static_cast<DWORD>(100), opt.get());
@@ -57,7 +57,7 @@ namespace SimpleComTest
 			SimpleCom::CommandlineOption<BYTE> opt(_T("[num]"), _T("test"), 1);
 
 			// Default
-			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[num]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::AreEqual(static_cast<BYTE>(1), opt.get());
@@ -79,7 +79,7 @@ namespace SimpleComTest
 			SimpleCom::CommandlineOption<int> opt(_T("[num]"), _T("test"), 100);
 
 			// Default
-			Assert::AreEqual(_T("[num]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[num]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::AreEqual(static_cast<int>(100), opt.get());
@@ -101,7 +101,7 @@ namespace SimpleComTest
 			SimpleCom::CommandlineOption<bool> opt(_T(""), _T("test"), false);
 
 			// Default
-			Assert::AreEqual(_T(""), opt.GetArgs());
+			Assert::AreEqual(TString(_T("")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(false, opt.need_arguments());
 			Assert::AreEqual(false, opt.get());
@@ -112,10 +112,10 @@ namespace SimpleComTest
 		}
 
 		TEST_METHOD(ParityCommandLineOption) {
-			SimpleCom::CommandlineOption<SimpleCom::Parity> opt(_T("[none|odd|even|mark|space]"), _T("test"), SimpleCom::Parity::NO_PARITY);
+			SimpleCom::CommandlineOption<SimpleCom::Parity> opt(SimpleCom::Parity::valueopts(), _T("test"), SimpleCom::Parity::NO_PARITY);
 
 			// Default
-			Assert::AreEqual(_T("[none|odd|even|mark|space]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[none|odd|even|mark|space]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::IsTrue(opt.get() == SimpleCom::Parity::NO_PARITY);
@@ -142,10 +142,10 @@ namespace SimpleComTest
 		}
 
 		TEST_METHOD(FlowControlCommandLineOption) {
-			SimpleCom::CommandlineOption<SimpleCom::FlowControl> opt(_T("[none|hardware|software]"), _T("test"), SimpleCom::FlowControl::NONE);
+			SimpleCom::CommandlineOption<SimpleCom::FlowControl> opt(SimpleCom::FlowControl::valueopts(), _T("test"), SimpleCom::FlowControl::NONE);
 
 			// Default
-			Assert::AreEqual(_T("[none|hardware|software]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[none|hardware|software]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::IsTrue(opt.get() == SimpleCom::FlowControl::NONE);
@@ -168,10 +168,10 @@ namespace SimpleComTest
 		}
 
 		TEST_METHOD(StopBitsCommandLineOption) {
-			SimpleCom::CommandlineOption<SimpleCom::StopBits> opt(_T("[1|1.5|2]"), _T("test"), SimpleCom::StopBits::ONE);
+			SimpleCom::CommandlineOption<SimpleCom::StopBits> opt(SimpleCom::StopBits::valueopts(), _T("test"), SimpleCom::StopBits::ONE);
 
 			// Default
-			Assert::AreEqual(_T("[1|1.5|2]"), opt.GetArgs());
+			Assert::AreEqual(TString(_T("[1|1.5|2]")), opt.GetArgs());
 			Assert::AreEqual(_T("test"), opt.GetDescription());
 			Assert::AreEqual(true, opt.need_arguments());
 			Assert::IsTrue(opt.get() == SimpleCom::StopBits::ONE);

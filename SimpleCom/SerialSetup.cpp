@@ -122,9 +122,9 @@ SimpleCom::SerialSetup::SerialSetup() :
 {
 	_options[_T("--baud-rate")] = new CommandlineOption<DWORD>(_T("[num]"), _T("Baud rate"), 115200);
 	_options[_T("--byte-size")] = new CommandlineOption<BYTE>(_T("[num]"), _T("Byte size"), 8);
-	_options[_T("--parity")] = new CommandlineOption<Parity>(_T("[none|odd|even|mark|space]"), _T("Parity"), const_cast<Parity&>(Parity::NO_PARITY));
-	_options[_T("--stop-bits")] = new CommandlineOption<StopBits>(_T("[1|1.5|2]"), _T("Stop bits"), const_cast<StopBits&>(StopBits::ONE));
-	_options[_T("--flow-control")] = new CommandlineOption<FlowControl>(_T("[none|hardware|software]"), _T("Flow control"), const_cast<FlowControl&>(FlowControl::NONE));
+	_options[_T("--parity")] = new CommandlineOption<Parity>(Parity::valueopts(), _T("Parity"), Parity::NO_PARITY);
+	_options[_T("--stop-bits")] = new CommandlineOption<StopBits>(StopBits::valueopts(), _T("Stop bits"), StopBits::ONE);
+	_options[_T("--flow-control")] = new CommandlineOption<FlowControl>(FlowControl::valueopts(), _T("Flow control"), FlowControl::NONE);
 	_options[_T("--utf8")] = new CommandlineOption<bool>(_T(""), _T("Use UTF-8 code page"), false);
 	_options[_T("--tty-resizer")] = new CommandlineOption<bool>(_T(""), _T("Use TTY Resizer"), false);
 	_options[_T("--show-dialog")] = new CommandlineOption<bool>(_T(""), _T("Show setup dialog"), false);

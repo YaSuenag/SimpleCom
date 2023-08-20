@@ -72,6 +72,18 @@ namespace SimpleCom {
 #undef DECLARE_ENUM
 
 		static const std::vector<Parity> values;
+
+		inline static TString valueopts() {
+			TString str = _T("[");
+			for (auto& value : values) {
+				str += value.tstr();
+				str += _T('|');
+			}
+			str[str.length() - 1] = _T(']');
+
+			return str;
+		}
+
 	};
 
 	/* Enum for flow control */
@@ -86,6 +98,18 @@ namespace SimpleCom {
 #undef DECLARE_ENUM
 
 		static const std::vector<FlowControl> values;
+
+		inline static TString valueopts() {
+			TString str = _T("[");
+			for (auto& value : values) {
+				str += value.tstr();
+				str += _T('|');
+			}
+			str[str.length() - 1] = _T(']');
+
+			return str;
+		}
+
 	};
 
 	/* Enum for stop bits */
@@ -100,6 +124,18 @@ namespace SimpleCom {
 #undef DECLARE_ENUM
 
 		static const std::vector<StopBits> values;
+
+		inline static TString valueopts() {
+			TString str = _T("[");
+			for (auto& value : values) {
+				str += value.tstr();
+				str += _T('|');
+			}
+			str[str.length() - 1] = _T(']');
+
+			return str;
+		}
+
 	};
 
 }
