@@ -40,6 +40,11 @@ bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 make
 ```
 
+You can specify following parameters:
+
+* `KERNEL_DEVEL_ROOT`: Include path should be added (for kernel headers)
+* `BPFTOOL`: Path to `bpftool`
+
 ## Install
 
 ```bash

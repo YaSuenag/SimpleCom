@@ -1,9 +1,9 @@
 .PHONY: clean
 
 TARGET = tty-resizer
-KERNEL_DEVEL_ROOT = /usr/src/kernels/$(shell uname -r)
+KERNEL_DEVEL_ROOT ?= /usr/src/kernels/$(shell uname -r)
 CC := clang
-BPFTOOL := bpftool
+BPFTOOL ?= bpftool
 
 CFLAGS = -g -O2 -Wall
 CPPFLAGS = -I$(KERNEL_DEVEL_ROOT) -I../common
