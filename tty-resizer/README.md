@@ -32,7 +32,7 @@ On distros which does not provide vmlinux.h like Ubuntu, you have to generate it
 bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 ```
 
-**⚠️NOTE⚠️** [Linux kernel from Raspberry Pi](https://github.com/raspberrypi/linux) disables `CONFIG_DEBUG_INFO_BTF` by default. This configuration is mandatory for tty-resizer. So you have to build and deploy the kernel which enables `CONFIG_DEBUG_INFO_BTF`, and also `bpftool` for it by yourself. See [document by Raspberry Pi](https://www.raspberrypi.com/documentation/computers/linux_kernel.html) for details.
+**⚠️NOTE⚠️** [Linux kernel from Raspberry Pi](https://github.com/raspberrypi/linux) disables `CONFIG_DEBUG_INFO_BTF` by default. This configuration is mandatory to generate vmlinux.h . So you have to build and deploy the kernel which enables `CONFIG_DEBUG_INFO_BTF`, and also `bpftool` for it by yourself. See [document by Raspberry Pi](https://www.raspberrypi.com/documentation/computers/linux_kernel.html) for details.
 
 ## Build
 
