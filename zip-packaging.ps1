@@ -10,6 +10,7 @@ Remove-Item -Recurse -Force $destdir*
 New-Item $destdir -itemType Directory
 Copy-Item $solutiondir\x64\Release\SimpleCom.exe $destdir
 Copy-Item $solutiondir\README.md $destdir
+Copy-Item $solutiondir\SECURITY.md $destdir
 Copy-Item $solutiondir\fragments.json $destdir
 
 [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
