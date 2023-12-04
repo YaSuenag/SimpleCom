@@ -58,7 +58,7 @@ public:
 		LSTATUS status = RegOpenKeyEx(hOpenKey, lpSubKey, ulOptions, samDesired, &hKey);
 		if (status != ERROR_SUCCESS) {
 			hKey = static_cast<HKEY>(INVALID_HANDLE_VALUE);
-			throw SimpleCom::WinAPIException(GetLastError(), lpSubKey);
+			throw SimpleCom::WinAPIException(status, lpSubKey);
 		}
 	}
 
