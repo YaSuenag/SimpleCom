@@ -1,0 +1,71 @@
+name: Publish new release
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: "publish"
+  cancel-in-progress: true
+
+jobs:
+  version-detection:
+    runs-on: ubuntu-latest
+    outputs:
+      version-num: ${{ steps.set-version-number.outputs.VERSION_NUM }}
+    steps:
+      - id: set-version-number
+        name: Set version number
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION_NUM="${TAG:1}"
+          echo "VERSION_NUM=$VERSION_NUM" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version-detection
+    runs-on: windows-2022
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+
+      - name: Setup devenv
+        run: |
+          $productPath = & vswhere.exe '-property' productPath
+          $devenv = $productPath.Replace(".exe", ".com")
+          $installPath = & vswhere.exe '-property' installationPath
+          $disablePath = $installPath + '\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild'
+          "DEVENV=$devenv" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "DISABLE_PATH=$disablePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+        shell: pwsh
+
+      - name: Disable OutOfProcBuild
+        run: ./DisableOutOfProcBuild.exe
+        working-directory: ${{ env.DISABLE_PATH }}
+        shell: pwsh
+
+      - name: Build
+        run: |
+          & '${{ env.DEVENV }}' SimpleCom.sln /Project ./Installer/Installer.vdproj /Build "Release|x64"
+        shell: pwsh
+
+      - name: 'Upload Release Asset'
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          release-tag: ${{ github.ref_name }}
+          files: dist/SimpleCom-${{ needs.version-detection.outputs.version-num }}.zip;Installer/SimpleComInstaller-${{ needs.version-detection.outputs.version-num }}.msi
+          repo-token: ${{ github.token }}
+
+  winget-pkg-pr:
+    needs: [version-detection, build]
+    runs-on: windows-2022
+    steps:
+      - name: Create PR
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: YaSuenag.SimpleCom
+          installers-regex: '\.msi$'
+          version: ${{ needs.version-detection.outputs.version-num }}
+          token: ${{ github.token }}
