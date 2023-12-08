@@ -26,7 +26,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.1.1
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -82,7 +82,7 @@ jobs:
 #        sudo apt-get install -y libbpf-dev linux-tools-common
 #
 #    - name: Checkout repository
-#      uses: actions/checkout@v4
+#      uses: actions/checkout@v4.1.1
 #
 #    # Initializes the CodeQL tools for scanning.
 #    - name: Initialize CodeQL
