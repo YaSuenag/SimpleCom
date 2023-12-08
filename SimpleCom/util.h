@@ -41,7 +41,7 @@ public:
 		}
 	}
 
-	inline HANDLE handle() {
+	inline HANDLE handle() const {
 		return _handle;
 	}
 };
@@ -68,7 +68,7 @@ public:
 		}
 	}
 
-	HKEY key() {
+	HKEY key() const {
 		return hKey;
 	}
 };
