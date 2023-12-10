@@ -61,6 +61,8 @@ jobs:
   winget-pkg-pr:
     needs: [version-detection, build]
     runs-on: windows-2022
+    permissions:
+      contents: write
     steps:
       - name: Create PR
         uses: vedantmgoyal2009/winget-releaser@v2
