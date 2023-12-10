@@ -61,8 +61,6 @@ jobs:
   winget-pkg-pr:
     needs: [version-detection, build]
     runs-on: windows-2022
-    permissions:
-      contents: write
     steps:
       - name: Create PR
         uses: vedantmgoyal2009/winget-releaser@v2
@@ -70,4 +68,4 @@ jobs:
           identifier: YaSuenag.SimpleCom
           installers-regex: '\.msi$'
           version: ${{ needs.version-detection.outputs.version-num }}
-          token: ${{ github.token }}
+          token: ${{ secrets.WINGET_TOKEN }}
