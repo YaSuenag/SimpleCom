@@ -132,8 +132,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,1,0
- PRODUCTVERSION 1,2,1,0
+ FILEVERSION 1,2,2,0
+ PRODUCTVERSION 1,2,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -149,12 +149,12 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "FileDescription", "SimpleCom"
-            VALUE "FileVersion", "1.2.1.0"
+            VALUE "FileVersion", "1.2.2.0"
             VALUE "InternalName", "SimpleCom"
             VALUE "LegalCopyright", "Copyright (C) 2019, 2023, Yasumasa Suenaga"
             VALUE "OriginalFilename", "SimpleCom.exe"
             VALUE "ProductName", "SimpleCom"
-            VALUE "ProductVersion", "1.2.1.0"
+            VALUE "ProductVersion", "1.2.2.0"
         END
     END
     BLOCK "VarFileInfo"
