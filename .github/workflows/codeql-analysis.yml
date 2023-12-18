@@ -30,7 +30,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -59,7 +59,7 @@ jobs:
         msbuild InstallerCustomActions\InstallerCustomActions.csproj -property:Configuration=Debug
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
 
 #
 # analyze-tty-resizer should be activated when Linux GH runner has v6.0 kernel or later.
@@ -86,7 +86,7 @@ jobs:
 #
 #    # Initializes the CodeQL tools for scanning.
 #    - name: Initialize CodeQL
-#      uses: github/codeql-action/init@v2
+#      uses: github/codeql-action/init@v3
 #      with:
 #        languages: cpp
 #        queries: security-extended,security-and-quality
@@ -95,4 +95,4 @@ jobs:
 #      run: make -C tty-resizer
 #
 #    - name: Perform CodeQL Analysis
-#      uses: github/codeql-action/analyze@v2
+#      uses: github/codeql-action/analyze@v3
