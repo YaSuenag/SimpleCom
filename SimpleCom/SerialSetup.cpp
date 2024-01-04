@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2023, Yasumasa Suenaga
+ * Copyright (C) 2019, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -330,16 +330,23 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case WM_COMMAND:
-			if (LOWORD(wParam) == IDCONNECT) {
+			switch (LOWORD(wParam)) {
+			case IDC_CHECK_AUTO_RECONNECT: {
+				BOOL checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT), BM_GETCHECK, 0, 0) == BST_CHECKED;
+				SendMessage(GetDlgItem(hDlg, IDC_RECONNECT_PAUSE), EM_SETREADONLY, !checked, 0);
+				SendMessage(GetDlgItem(hDlg, IDC_RECONNECT_TIMEOUT), EM_SETREADONLY, !checked, 0);
+				return TRUE;
+			}
+			case IDCONNECT:
 				GetConfigurationFromDialog(hDlg, setup);
 				EndDialog(hDlg, IDCONNECT);
 				return TRUE;
-			}
-			else if (LOWORD(wParam) == IDCANCEL) {
+			case IDCANCEL:
 				EndDialog(hDlg, IDCANCEL);
 				return TRUE;
+			default:
+				return FALSE;
 			}
-			return FALSE;
 
 		case WM_CLOSE:
 			EndDialog(hDlg, IDCANCEL);
