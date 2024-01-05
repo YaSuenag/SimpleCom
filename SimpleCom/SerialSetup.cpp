@@ -226,6 +226,8 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_AUTO_RECONNECT)"));
 	}
 	SendMessage(hCheckAutoReconnect, BM_SETCHECK, setup->GetAutoReconnect() ? BST_CHECKED : BST_UNCHECKED, 0);
+	EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_PAUSE), setup->GetAutoReconnect());
+	EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_TIMEOUT), setup->GetAutoReconnect());
 
 	text_str = TO_STRING(setup->GetAutoReconnectPauseInSec());
 	if (!SetDlgItemText(hDlg, IDC_RECONNECT_PAUSE, text_str.c_str())) {
@@ -333,8 +335,8 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 			switch (LOWORD(wParam)) {
 			case IDC_CHECK_AUTO_RECONNECT: {
 				BOOL checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT), BM_GETCHECK, 0, 0) == BST_CHECKED;
-				SendMessage(GetDlgItem(hDlg, IDC_RECONNECT_PAUSE), EM_SETREADONLY, !checked, 0);
-				SendMessage(GetDlgItem(hDlg, IDC_RECONNECT_TIMEOUT), EM_SETREADONLY, !checked, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_PAUSE), checked);
+				EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_TIMEOUT), checked);
 				return TRUE;
 			}
 			case IDCONNECT:
