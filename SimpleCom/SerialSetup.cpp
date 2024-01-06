@@ -73,6 +73,38 @@ void SimpleCom::CommandlineOption<SimpleCom::FlowControl>::set_from_arg(LPCTSTR 
 	throw std::invalid_argument("FlowControl: unknown argument");
 }
 
+void SimpleCom::CommandlineOption<LPTSTR>::set_from_arg(LPCTSTR arg) {
+	set(const_cast<LPTSTR>(arg));
+}
+
+// constructor
+SimpleCom::CommandlineOption<LPTSTR>::CommandlineOption(const TString args, LPCTSTR description, LPTSTR default_val) : CommandlineOptionBase(args, description) {
+	_value = (default_val == nullptr) ? nullptr : _tcsdup(default_val);
+}
+
+template<typename T> SimpleCom::CommandlineOption<T>::CommandlineOption(const TString args, LPCTSTR description, T default_val) : CommandlineOptionBase(args, description), _value(default_val) {
+	// Do nothing
+}
+
+// destructor
+template<> SimpleCom::CommandlineOption<LPTSTR>::~CommandlineOption() {
+	free(_value);
+}
+
+template<typename T> SimpleCom::CommandlineOption<T>::~CommandlineOption() {
+	// Do nothing
+}
+
+// setter
+template<> void SimpleCom::CommandlineOption<LPTSTR>::set(LPTSTR new_value) {
+	free(nullptr);
+	_value = (new_value == nullptr) ? nullptr : _tcsdup(new_value);
+}
+
+template<typename T> void SimpleCom::CommandlineOption<T>::set(T new_value) {
+	_value = new_value;
+}
+
 #ifdef _UNICODE
 #define COUT std::wcout
 #else
@@ -111,6 +143,8 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_options[_T("--auto-reconnect")] = new CommandlineOption<bool>(_T(""), _T("Reconnect to peripheral automatically"), false);
 	_options[_T("--auto-reconnect-pause")] = new CommandlineOption<int>(_T("[num]"), _T("Pause time in seconds before reconnecting"), 3);
 	_options[_T("--auto-reconnect-timeout")] = new CommandlineOption<int>(_T("[num]"), _T("Reconnect timeout"), 120);
+	_options[_T("--log-file")] = new CommandlineOption<LPTSTR>(_T("[logfile]"), _T("Log serial communication to file"), nullptr);
+	_options[_T("--stdin-logging")] = new CommandlineOption<bool>(_T(""), _T("Enable stdin logging"), false);
 	_options[_T("--help")] = new CommandlineHelpOption(&_options);
 }
 
@@ -239,6 +273,28 @@ static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_RECONNECT_TIMEOUT)"));
 	}
 
+	HWND hCheckLog = GetDlgItem(hDlg, IDC_CHECK_LOG);
+	if (hCheckLog == nullptr) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_CHECK_LOG)"));
+	}
+	if (setup->GetLogFile() == nullptr) {
+		SendMessage(hCheckLog, BM_SETCHECK, BST_UNCHECKED, 0);
+	}
+	else {
+		if (!SetDlgItemText(hDlg, IDC_LOGFILEEDIT, setup->GetLogFile())) {
+			throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_LOGFILEEDIT)"));
+		}
+		SendMessage(hCheckLog, BM_SETCHECK, BST_CHECKED, 0);
+		EnableWindow(GetDlgItem(hDlg, IDC_LOGFILEBTN), TRUE);
+		EnableWindow(GetDlgItem(hDlg, IDC_LOGFILEEDIT), TRUE);
+		EnableWindow(GetDlgItem(hDlg, IDC_STDIN_LOGGING), TRUE);
+	}
+
+	HWND hCheckStdinLogging = GetDlgItem(hDlg, IDC_STDIN_LOGGING);
+	if (hCheckStdinLogging == nullptr) {
+		throw SimpleCom::WinAPIException(GetLastError(), _T("GetDlgItem(IDC_STDIN_LOGGING)"));
+	}
+	SendMessage(hCheckStdinLogging, BM_SETCHECK, setup->IsEnableStdinLogging() ? BST_CHECKED : BST_UNCHECKED, 0);
 }
 
 /*
@@ -315,6 +371,26 @@ static bool GetConfigurationFromDialog(HWND hDlg, SimpleCom::SerialSetup* setup)
 	}
 	setup->SetAutoReconnectTimeoutInSec(intval);
 
+	checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_LOG), BM_GETCHECK, 0, 0);
+	if (checked == BST_CHECKED) {
+		TCHAR logfile[MAX_PATH];
+		auto result = GetDlgItemText(hDlg, IDC_LOGFILEEDIT, logfile, MAX_PATH);
+		if ((result == 0) || (result >= MAX_PATH)) {
+			throw SimpleCom::SerialSetupException(_T("SimpleCom configuration"), _T("Invalid log file"));
+		}
+		else if (_tcslen(logfile) == 0) {
+			throw SimpleCom::SerialSetupException(_T("SimpleCom configuration"), _T("Log file was not specified in spite of logging enabled."));
+		}
+		else {
+			setup->SetLogFile(logfile);
+			setup->SetEnableStdinLogging(SendMessage(GetDlgItem(hDlg, IDC_STDIN_LOGGING), BM_GETCHECK, 0, 0) == BST_CHECKED);
+		}
+	}
+	else {
+		setup->SetLogFile(nullptr);
+		setup->SetEnableStdinLogging(false);
+	}
+
 	return true;
 }
 
@@ -337,6 +413,28 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 				BOOL checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_AUTO_RECONNECT), BM_GETCHECK, 0, 0) == BST_CHECKED;
 				EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_PAUSE), checked);
 				EnableWindow(GetDlgItem(hDlg, IDC_RECONNECT_TIMEOUT), checked);
+				return TRUE;
+			}
+			case IDC_CHECK_LOG: {
+				BOOL checked = SendMessage(GetDlgItem(hDlg, IDC_CHECK_LOG), BM_GETCHECK, 0, 0) == BST_CHECKED;
+				EnableWindow(GetDlgItem(hDlg, IDC_LOGFILEBTN), checked);
+				EnableWindow(GetDlgItem(hDlg, IDC_LOGFILEEDIT), checked);
+				EnableWindow(GetDlgItem(hDlg, IDC_STDIN_LOGGING), checked);
+				return TRUE;
+			}
+			case IDC_LOGFILEBTN: {
+				OPENFILENAME filename_param = { 0 };
+				TCHAR filename[MAX_PATH] = { 0 };
+				filename_param.lStructSize = sizeof(OPENFILENAME);
+				filename_param.lpstrFile = filename;
+				filename_param.nMaxFile = MAX_PATH;
+				filename_param.hwndOwner = hDlg;
+
+				if (GetSaveFileName(&filename_param)) {
+					if (!SetDlgItemText(hDlg, IDC_LOGFILEEDIT, filename)) {
+						throw SimpleCom::WinAPIException(GetLastError(), _T("SetDlgItemText(IDC_LOGFILEEDIT)"));
+					}
+				}
 				return TRUE;
 			}
 			case IDCONNECT:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -193,6 +193,24 @@ namespace SimpleComTest
 			Assert::ExpectException<std::invalid_argument>(test);
 		}
 
+		TEST_METHOD(StringsCommandLineOption) {
+			SimpleCom::CommandlineOption<LPTSTR> opt(_T("[str]"), _T("test"), _T("default"));
+
+			// Default
+			Assert::AreEqual(TString(_T("[str]")), opt.GetArgs());
+			Assert::AreEqual(_T("test"), opt.GetDescription());
+			Assert::AreEqual(true, opt.need_arguments());
+			Assert::AreEqual(_T("default"), opt.get());
+
+			// Setter
+			opt.set(_T("setter"));
+			Assert::AreEqual(_T("setter"), opt.get());
+
+			// Set from command line argument
+			opt.set_from_arg(_T("arg"));
+			Assert::AreEqual(_T("arg"), opt.get());
+		}
+
 		TEST_METHOD(DefaultValueTest)
 		{
 			// Default values are for Raspberry Pi
@@ -209,6 +227,8 @@ namespace SimpleComTest
 			Assert::AreEqual(false, setup.GetAutoReconnect());
 			Assert::AreEqual(3, setup.GetAutoReconnectPauseInSec());
 			Assert::AreEqual(120, setup.GetAutoReconnectTimeoutInSec());
+			Assert::IsNull(setup.GetLogFile());
+			Assert::AreEqual(false, setup.IsEnableStdinLogging());
 		}
 
 		TEST_METHOD(ArgParserTest)
@@ -227,6 +247,8 @@ namespace SimpleComTest
 				_T("--auto-reconnect"),
 				_T("--auto-reconnect-pause"), _T("5"),
 				_T("--auto-reconnect-timeout"), _T("20"),
+				_T("--log-file"), _T(R"(A:\test.log)"),
+				_T("--stdin-logging"),
 				_T("COM100")
 			};
 
@@ -244,6 +266,8 @@ namespace SimpleComTest
 			Assert::AreEqual(true, setup.GetAutoReconnect());
 			Assert::AreEqual(5, setup.GetAutoReconnectPauseInSec());
 			Assert::AreEqual(20, setup.GetAutoReconnectTimeoutInSec());
+			Assert::AreEqual(_T(R"(A:\test.log)"), setup.GetLogFile());
+			Assert::AreEqual(true, setup.IsEnableStdinLogging());
 			Assert::AreEqual(_T("COM100"), setup.GetPort().c_str());
 		}
 

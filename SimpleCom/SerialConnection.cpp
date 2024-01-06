@@ -30,17 +30,30 @@ typedef struct {
 	HANDLE hTermEvent;
 	HWND parent_hwnd;
 	HANDLE hStdOut;
+	SimpleCom::LogWriter* logwriter;
 } TStdOutRedirectorParam;
 
 
-SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer) :
+SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging) :
 	_device(device),
 	_parent_hwnd(hwnd),
 	_hStdIn(hStdIn),
 	_hStdOut(hStdOut),
-	_useTTYResizer(useTTYResizer)
+	_useTTYResizer(useTTYResizer),
+	_enableStdinLogging(enableStdinLogging)
 {
 	CopyMemory(&_dcb, dcb, sizeof(_dcb));
+	_logwriter = (logfilename == nullptr) ? nullptr : new LogWriter(logfilename);
+
+	if (_enableStdinLogging && (_logwriter == nullptr)) {
+		throw _T("Logger was not set up in spite of stdin logging was enabled.");
+	}
+}
+
+SimpleCom::SerialConnection::~SerialConnection(){
+	if (_logwriter != nullptr) {
+		delete _logwriter;
+	}
 }
 
 void SimpleCom::SerialConnection::InitSerialPort(const HANDLE hSerial) {
@@ -86,13 +99,16 @@ bool SimpleCom::SerialConnection::ProcessKeyEvents(const KEY_EVENT_RECORD keyeve
 	if (keyevent.bKeyDown && (keyevent.uChar.AsciiChar != '\0')) {
 		for (int send_idx = 0; send_idx < keyevent.wRepeatCount; send_idx++) {
 			writer.Put(keyevent.uChar.AsciiChar);
+			if (_enableStdinLogging) {
+				_logwriter->Write(keyevent.uChar.AsciiChar);
+			}
 		}
 	}
 
 	return false;
 }
 
-static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapped, const HANDLE hStdOut) {
+static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapped, const HANDLE hStdOut, SimpleCom::LogWriter* logwriter) {
 	DWORD event_mask = 0;
 	if (!WaitCommEvent(hSerial, &event_mask, overlapped)) {
 		if (GetLastError() == ERROR_IO_PENDING) {
@@ -134,6 +150,9 @@ static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapp
 				if (!WriteFile(hStdOut, buf, nBytesRead, &nBytesWritten, NULL)) {
 					throw SimpleCom::WinAPIException(GetLastError(), _T("WriteFile to stdout"));
 				}
+				if (logwriter != nullptr) {
+					logwriter->Write(buf, nBytesRead);
+				}
 				remainBytes -= nBytesRead;
 			}
 
@@ -156,7 +175,7 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 				throw SimpleCom::WinAPIException(GetLastError(), _T("ResetEvent for reading data from serial device"));
 			}
 
-			StdOutRedirectorLoopInner(param->hSerial, param->overlapped, param->hStdOut);
+			StdOutRedirectorLoopInner(param->hSerial, param->overlapped, param->hStdOut, param->logwriter);
 		}
 		catch (SimpleCom::WinAPIException& e) {
 			if (WaitForSingleObject(param->hTermEvent, 0) != WAIT_OBJECT_0) {
@@ -264,7 +283,8 @@ bool SimpleCom::SerialConnection::DoSession() {
 		.overlapped = &serialReadOverlapped,
 		.hTermEvent = hTermEvent.handle(),
 		.parent_hwnd = this->_parent_hwnd,
-		.hStdOut = this->_hStdOut
+		.hStdOut = this->_hStdOut,
+		.logwriter = this->_logwriter
 	};
 	HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, &param, 0, NULL), _T("CreateThread for StdOutRedirector"));
 

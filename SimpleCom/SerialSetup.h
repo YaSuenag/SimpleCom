@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2023, Yasumasa Suenaga
+ * Copyright (C) 2019, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -49,9 +49,9 @@ namespace SimpleCom {
 		T _value;
 
 	public:
-		CommandlineOption(const TString args, LPCTSTR description, T default_val) : CommandlineOptionBase(args, description), _value(default_val) {}
-		virtual ~CommandlineOption() {}
-		void set(T new_value) { _value = new_value; }
+		CommandlineOption(const TString args, LPCTSTR description, T default_val);
+		virtual ~CommandlineOption();
+		virtual void set(T new_value);
 		T get() { return _value; }
 
 		virtual bool need_arguments() { return !std::is_same<T, bool>::value; }
@@ -183,6 +183,22 @@ namespace SimpleCom {
 
 		inline int GetAutoReconnectTimeoutInSec() {
 			return static_cast<CommandlineOption<int>*>(_options[_T("--auto-reconnect-timeout")])->get();
+		}
+
+		inline void SetLogFile(LPTSTR logfile) {
+			static_cast<CommandlineOption<LPTSTR>*>(_options[_T("--log-file")])->set(logfile);
+		}
+
+		inline LPCTSTR GetLogFile() {
+			return static_cast<CommandlineOption<LPTSTR>*>(_options[_T("--log-file")])->get();
+		}
+
+		inline void SetEnableStdinLogging(bool enabled) {
+			static_cast<CommandlineOption<bool>*>(_options[_T("--stdin-logging")])->set(enabled);
+		}
+
+		inline bool IsEnableStdinLogging() {
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--stdin-logging")])->get();
 		}
 
 		inline SerialDeviceScanner& GetDeviceScanner() {
