@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -78,6 +78,9 @@ bool SimpleCom::SerialConnection::ProcessKeyEvents(const KEY_EVENT_RECORD keyeve
 			SetEvent(hTermEvent);
 			return true;
 		}
+
+		// Return immediately without issueing escape sequence of F1
+		return false;
 	}
 
 	if (keyevent.bKeyDown && (keyevent.uChar.AsciiChar != '\0')) {
@@ -195,6 +198,18 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 
 				for (DWORD idx = 0; idx < n_read; idx++) {
 					if (inputs[idx].EventType == KEY_EVENT) {
+						// Skip escape sequence of F1 (0x1B 0x4F 0x50)
+						//
+						// Input sequence on Windows (ENABLE_VIRTUAL_TERMINAL_INPUT):
+						//   https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#numpad--function-keys
+						if (idx + 2 < n_read &&
+							(inputs[idx].Event.KeyEvent.wRepeatCount == 1 && inputs[idx].Event.KeyEvent.uChar.AsciiChar == '\x1b' /* ESC */) &&
+							(inputs[idx + 1].Event.KeyEvent.wRepeatCount == 1 && inputs[idx + 1].Event.KeyEvent.uChar.AsciiChar == 'O') &&
+							(inputs[idx + 2].Event.KeyEvent.wRepeatCount == 1 && inputs[idx + 2].Event.KeyEvent.uChar.AsciiChar == 'P')) {
+							idx += 2;
+							continue;
+						}
+
 						if (ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, hTermEvent)) {
 							return true;
 						}
