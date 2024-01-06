@@ -35,6 +35,8 @@ Console app for serial connection.
 | `--auto-reconnect` | false | Reconnect to peripheral automatically when serial session is disconnected. |
 | `--auto-reconnect-pause [num]` | 3 | Pause time in seconds before reconnecting to peripheral. |
 | `--auto-reconnect-timeout [num]` | 120 | Reconnect timeout |
+| `--log-file [logfile]` | &lt;none&gt; | Log serial communication to file |
+| `--stdin-logging` | false | Enable stdin logging<br><br>⚠️Possible to be logged each chars duplicately due to echo back from the console when this option is set, and also secrets (e.g. passphrase) typed into the console will be logged even if it is not shown on the console. |
 | `--help` | - | Show help message |
 
 # How to build

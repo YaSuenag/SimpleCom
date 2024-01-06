@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="EnumValue.cpp" />
+    <ClCompile Include="LogWriter.cpp" />
     <ClCompile Include="SerialConnection.cpp" />
     <ClCompile Include="SerialDeviceScanner.cpp" />
     <ClCompile Include="SerialPortWriter.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="..\common\common.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="EnumValue.h" />
+    <ClInclude Include="LogWriter.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SerialConnection.h" />
     <ClInclude Include="SerialDeviceScanner.h" />

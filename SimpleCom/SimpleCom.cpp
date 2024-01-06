@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2023, Yasumasa Suenaga
+ * Copyright (C) 2019, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -135,7 +135,7 @@ int _tmain(int argc, LPCTSTR argv[])
 
 	try {
 		while (true) {
-			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, std::get<0>(std_handles), std::get<1>(std_handles), setup.GetUseTTYResizer());
+			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, std::get<0>(std_handles), std::get<1>(std_handles), setup.GetUseTTYResizer(), setup.GetLogFile(), setup.IsEnableStdinLogging());
 			bool exited = conn.DoSession();
 
 			if (setup.GetAutoReconnect() && !exited) {

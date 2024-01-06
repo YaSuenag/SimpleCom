@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,33 +19,24 @@
 #pragma once
 
 #include "stdafx.h"
-#include "SerialPortWriter.h"
-#include "LogWriter.h"
-
 
 namespace SimpleCom {
 
-	class SerialConnection
+	/*
+	 * Utility class for wrinting log.
+	 * THIS CLASS IS NOT THREAD SAFETY !!!
+	 */
+	class LogWriter
 	{
 	private:
-		TString _device;
-		DCB _dcb;
-		HWND _parent_hwnd;
-		HANDLE _hStdIn;
-		HANDLE _hStdOut;
-		bool _useTTYResizer;
-		LogWriter* _logwriter;
-		bool _enableStdinLogging;
-
-		void InitSerialPort(const HANDLE hSerial);
-		bool ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer, const HANDLE hTermEvent);
-		bool StdInRedirector(const HANDLE hSerial, const HANDLE hTermEvent);
+		HANDLE _handle;
 
 	public:
-		SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging);
-		virtual ~SerialConnection();
+		LogWriter(LPCTSTR logfilename);
+		virtual ~LogWriter();
 
-		bool DoSession();
+		void Write(const char c);
+		void Write(const char* data, const DWORD len);
 	};
 
 }
