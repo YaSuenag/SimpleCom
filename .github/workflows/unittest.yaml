@@ -20,7 +20,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1.3
 
     - name: Setup VSTest Path
-      uses: darenm/Setup-VSTest@v1.2
+      uses: darenm/Setup-VSTest@v1.3
 
     - name: Build unit test
       run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug;Platform=x64"
