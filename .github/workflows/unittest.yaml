@@ -23,7 +23,7 @@ jobs:
       uses: darenm/Setup-VSTest@v1.2
 
     - name: Build unit test
-      run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug;Platform=x64"
+      run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug" -property:"Platform=x64"
 
     - name: Run unit test
       run: vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
