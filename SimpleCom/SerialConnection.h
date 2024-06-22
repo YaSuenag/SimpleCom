@@ -38,7 +38,8 @@ namespace SimpleCom {
 		bool _enableStdinLogging;
 
 		void InitSerialPort(const HANDLE hSerial);
-		bool ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer, const HANDLE hTermEvent);
+		bool ShouldTerminate(SerialPortWriter& writer, const HANDLE hTermEvent);
+		void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer);
 		bool StdInRedirector(const HANDLE hSerial, const HANDLE hTermEvent);
 
 	public:
