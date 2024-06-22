@@ -99,7 +99,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(SolutionDir)SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(ProjectDir)..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -115,7 +115,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(SolutionDir)SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(ProjectDir)..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -135,7 +135,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(SolutionDir)SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(ProjectDir)..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -155,7 +155,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(SolutionDir)SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;$(ProjectDir)..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
