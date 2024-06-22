@@ -77,23 +77,29 @@ void SimpleCom::SerialConnection::InitSerialPort(const HANDLE hSerial) {
 }
 
 /*
- * Write key code in KEY_EVENT_RECORD to send buffer.
- * If F1 key is found, all of send_data would be flushed and would set true to terminated flag.
- * Return true if F1 key is pushed (active close).
+ * Ask user whether terminate current serial session via dialog box.
+ * Return true if session should be closed (active close).
  */
-bool SimpleCom::SerialConnection::ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer, const HANDLE hTermEvent) {
+bool SimpleCom::SerialConnection::ShouldTerminate(SerialPortWriter& writer, const HANDLE hTermEvent) {
+	// Write all keys in the buffer before F1
+	writer.WriteAsync();
+
+	if (MessageBox(_parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+		SetEvent(hTermEvent);
+		return true;
+	}
+
+	return false;
+}
+
+/*
+ * Write key code in KEY_EVENT_RECORD to send buffer.
+ */
+void SimpleCom::SerialConnection::ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer) {
 
 	if (keyevent.wVirtualKeyCode == VK_F1) {
-		// Write all keys in the buffer before F1
-		writer.WriteAsync();
-
-		if (MessageBox(_parent_hwnd, _T("Do you want to leave from this serial session?"), _T("SimpleCom"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-			SetEvent(hTermEvent);
-			return true;
-		}
-
-		// Return immediately without issueing escape sequence of F1
-		return false;
+		// F1 key should not be propagated to peripheral.
+		return;
 	}
 
 	if (keyevent.bKeyDown && (keyevent.uChar.AsciiChar != '\0')) {
@@ -104,8 +110,6 @@ bool SimpleCom::SerialConnection::ProcessKeyEvents(const KEY_EVENT_RECORD keyeve
 			}
 		}
 	}
-
-	return false;
 }
 
 static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapped, const HANDLE hStdOut, SimpleCom::LogWriter* logwriter) {
@@ -226,12 +230,15 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 							(inputs[idx + 1].Event.KeyEvent.wRepeatCount == 1 && inputs[idx + 1].Event.KeyEvent.uChar.AsciiChar == 'O') &&
 							(inputs[idx + 2].Event.KeyEvent.wRepeatCount == 1 && inputs[idx + 2].Event.KeyEvent.uChar.AsciiChar == 'P')) {
 							idx += 2;
-							continue;
+							if (ShouldTerminate(writer, hTermEvent)) {
+								return true;
+							}
+							else{
+								continue;
+							}
 						}
 
-						if (ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer, hTermEvent)) {
-							return true;
-						}
+						ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer);
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
 						char buf[RINGBUF_SZ];
