@@ -19,6 +19,7 @@
 #include "stdafx.h"
 
 #include "SerialSetup.h"
+#include "util.h"
 #include "WinAPIException.h"
 #include "resource.h"
 
@@ -112,6 +113,10 @@ template<typename T> void SimpleCom::CommandlineOption<T>::set(T new_value) {
 #endif
 
 void SimpleCom::CommandlineHelpOption::set_from_arg(LPCTSTR arg) {
+	ProductInfo prodinfo;
+
+	COUT << prodinfo.GetProductName() << _T(" ") << prodinfo.GetProductVersion() << std::endl;
+	COUT << prodinfo.GetLegalCopyright() << std::endl;
 	COUT << R"(
 Usage:
   SimpleCom.exe <options> <COM port>
@@ -169,6 +174,15 @@ static void AddStringToComboBox(HWND hCombo, TString str) {
 static void InitializeDialog(HWND hDlg, SimpleCom::SerialSetup *setup) {
 	// Initialize serial configuration.
 	// Initial value is for serial console of Raspberry Pi.
+
+	TStringStream dlg_caption;
+	dlg_caption << _T("Serial Connection Setup");
+	ProductInfo prodinfo;
+	LPCTSTR product_name = prodinfo.GetProductName();
+	if (product_name != nullptr) {
+		dlg_caption << _T("  -  ") << product_name << _T(" ") << prodinfo.GetProductVersion();
+	}
+	SetWindowText(hDlg, dlg_caption.str().c_str());
 
 	TString text_str;
 	WPARAM cb_idx;

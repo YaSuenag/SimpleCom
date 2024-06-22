@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;..\SimpleCom\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies);WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);version.lib;WinAPIException.obj;debug.obj;stdafx.obj;SerialPortWriter.obj;SerialSetup.obj;SerialDeviceScanner.obj;EnumValue.obj;LogWriter.obj;util.obj</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

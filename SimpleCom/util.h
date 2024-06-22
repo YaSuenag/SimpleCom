@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -71,4 +71,24 @@ public:
 	HKEY key() const {
 		return hKey;
 	}
+};
+
+/*
+ * Class for handling product (SimpleCom) information.
+ */
+class ProductInfo {
+private:
+	unsigned char* data;
+	DWORD data_len;
+
+	void LoadVersionInfo(LPCTSTR exe_name);
+	LPCTSTR GetString(LPCTSTR query);
+
+public:
+	ProductInfo();
+	~ProductInfo();
+
+	LPCTSTR GetProductName();
+	LPCTSTR GetProductVersion();
+	LPCTSTR GetLegalCopyright();
 };
