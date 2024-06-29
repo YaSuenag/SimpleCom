@@ -1,8 +1,13 @@
-﻿param(
-    [string]$version
-)
+﻿$solutiondir = $PSScriptRoot
 
-$solutiondir = $PSScriptRoot
+$version_grep = Select-String -Path $solutiondir\common\generated\version.h -Pattern ' SEMVER \"(.+)\"$'
+$version = $version_grep.Matches.Groups[1].Value
+
+if($version -eq $null){
+  Write-Output "Unknown version. Please check version.h ."
+  return
+}
+
 $distname = "SimpleCom-$version"
 $destdir = "$solutiondir\dist\$distname"
 
