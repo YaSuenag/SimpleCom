@@ -1,8 +1,8 @@
 ﻿param(
-    [string]$version,
-    [string]$solutiondir
+    [string]$version
 )
 
+$solutiondir = $PSScriptRoot
 $distname = "SimpleCom-$version"
 $destdir = "$solutiondir\dist\$distname"
 
