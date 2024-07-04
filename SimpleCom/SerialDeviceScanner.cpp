@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -184,6 +184,9 @@ void SimpleCom::SerialDeviceScanner::ScanSerialDevices() {
 
 		status = RegEnumValue(hKey, idx, InterfaceName, &ValueNameLen, NULL, NULL, reinterpret_cast<LPBYTE>(DeviceName), &ValueLen);
 		if (status == ERROR_SUCCESS) {
+			// DeviceName (lpData in RegEnumValue) might not be null-terminated, so we need to add null char (0).
+			// This argument is defined as LPBYTE, so we need to divide the length with sizeof(TCHAR).
+			DeviceName[ValueLen / sizeof(TCHAR)] = 0;
 			_devices[DeviceName] = InterfaceName;
 		}
 
