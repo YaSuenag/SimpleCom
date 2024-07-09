@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,12 +19,12 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define RESIZER_START_MARKER  '\x05'
+#define RESIZER_START_MARKER  '\x12'  // DC2
 #define RESIZER_END_MARKER    't'
 #define RESIZER_CANCEL_MARKER 'c'
 #define RESIZER_SEPARATOR     ";"
 
-/* marker (0x05) + ushort (up to 65535) + separator (;) + ushort + end marker */
+/* marker (0x12) + ushort (up to 65535) + separator (;) + ushort + end marker */
 #define RINGBUF_SZ 13
 
 #endif
