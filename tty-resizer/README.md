@@ -105,3 +105,5 @@ Some strings for resizing might be shown on your serial console in earlier phase
 You should wait few seconds if you start tty-resizer from `tty-resizer.service` when you encounter this problem.
 
 This might be caused that `ioctl` to TTY is failed. So `tty-resizer.service` in this source would restart when the issue happens to avoid it. Then it will work fine.
+
+And also TTY Resizer wouldn't work file with full-screen application like Vim. Noisy chars (for Vim) might be input, and TTY Resizer cannot set resized console size.

@@ -212,6 +212,9 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 
 	try {
 		HANDLE waiters[] = { _hStdIn, hTermEvent };
+		COORD newConsoleSize;
+		bool isConsoleSizeUpdated = false;
+
 		while (true) {
 			DWORD result = WaitForMultipleObjects(sizeof(waiters) / sizeof(HANDLE), waiters, FALSE, INFINITE);
 			if (result == WAIT_OBJECT_0) { // hStdIn
@@ -241,9 +244,18 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 						ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer);
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
-						char buf[RINGBUF_SZ];
-						int len = snprintf(buf, sizeof(buf), "%c%d" RESIZER_SEPARATOR "%d%c", RESIZER_START_MARKER, inputs[idx].Event.WindowBufferSizeEvent.dwSize.Y, inputs[idx].Event.WindowBufferSizeEvent.dwSize.X, RESIZER_END_MARKER);
-						writer.PutData(buf, len);
+						CopyMemory(&newConsoleSize, &inputs[idx].Event.WindowBufferSizeEvent, sizeof(COORD));
+						isConsoleSizeUpdated = true;
+					}
+
+					if (isConsoleSizeUpdated) {
+						DWORD numOfEvents;
+						if (GetNumberOfConsoleInputEvents(_hStdIn, &numOfEvents) && (numOfEvents == 0)) {
+							char buf[RINGBUF_SZ];
+							int len = snprintf(buf, sizeof(buf), "%c%d" RESIZER_SEPARATOR "%d%c", RESIZER_START_MARKER, newConsoleSize.Y, newConsoleSize.X, RESIZER_END_MARKER);
+							writer.PutData(buf, len);
+							isConsoleSizeUpdated = false;
+						}
 					}
 				}
 
