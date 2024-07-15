@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@
 #include "common.h"
 
 
-static int tty_fd = -1;
+static const char *ttypath;
 static ino_t tty_ino;
 static struct tty_resizer_bpf *skel = NULL;
 static struct ring_buffer *rb = NULL;
@@ -47,10 +47,16 @@ int on_char_received(void *ctx, void *data, size_t size){
   if(ch == 't'){
     ringbuf_received[ringbuf_received_idx] = '\0';
     if(sscanf(ringbuf_received, "%hu" RESIZER_SEPARATOR "%hu", &ws.ws_row, &ws.ws_col) == 2){
+      int tty_fd = open(ttypath, O_RDONLY | O_NOCTTY);
+      if(tty_fd == -1){
+        perror("TTY open");
+        _exit(-100);
+      }
       if(ioctl(tty_fd, TIOCSWINSZ, &ws) == -1){
         perror("ioctl");
         _exit(-200);
       }
+      close(tty_fd);
     }
     ringbuf_received_idx = 0;
   }
@@ -64,10 +70,10 @@ int on_char_received(void *ctx, void *data, size_t size){
   return 0;
 }
 
-static int setup_tty(const char *ttypath){
+static int setup_tty(){
   struct stat statst;
 
-  tty_fd = open(ttypath, O_RDONLY | O_NOCTTY);
+  int tty_fd = open(ttypath, O_RDONLY | O_NOCTTY);
   if(tty_fd == -1){
     perror("open");
     return -1;
@@ -78,6 +84,7 @@ static int setup_tty(const char *ttypath){
     return -2;
   }
   tty_ino = statst.st_ino;
+  close(tty_fd);
 
   return 0;
 }
@@ -110,21 +117,19 @@ static int setup_bpf(){
 }
 
 int main(int argc, char *argv[]){
-  char *devfile;
-
   if((argc == 3) && (strcmp(argv[1], "-v") == 0)){
     libbpf_set_print(libbpf_print);
-    devfile = argv[2];
+    ttypath = argv[2];
   }
   else if(argc == 2){
-    devfile = argv[1];
+    ttypath = argv[1];
   }
   else{
     printf("Usage: %s <-v> [TTY device file]\n", argv[0]);
     return -100;
   }
 
-  if((setup_tty(devfile) == 0) && (setup_bpf() == 0)){
+  if((setup_tty() == 0) && (setup_bpf() == 0)){
     while(true){
       int ret = ring_buffer__poll(rb, -1);
       if (ret < 0 && errno != EINTR) {
@@ -142,9 +147,6 @@ int main(int argc, char *argv[]){
   }
   if(skel != NULL){
     tty_resizer_bpf__destroy(skel);
-  }
-  if(tty_fd != -1){
-    close(tty_fd);
   }
 
   return -1;

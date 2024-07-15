@@ -96,14 +96,4 @@ When `0x12` (DC2) is received in tty-resizer, subsequent chars are captured in t
 
 # Known issue
 
-Some strings for resizing might be shown on your serial console in earlier phase (especially just after the boot) like following:
-
-```
-[root@raspberry-pi ~]# 30;122t31;122t31;123t31;124t
-```
-
-You should wait few seconds if you start tty-resizer from `tty-resizer.service` when you encounter this problem.
-
-This might be caused that `ioctl` to TTY is failed. So `tty-resizer.service` in this source would restart when the issue happens to avoid it. Then it will work fine.
-
-And also TTY Resizer wouldn't work file with full-screen application like Vim. Noisy chars (for Vim) might be input, and TTY Resizer cannot set resized console size.
+TTY Resizer might not work fine with full-screen application like Vim. Noisy chars (for Vim) might be input, and TTY Resizer might not be able to set resized console size while that app is running.
