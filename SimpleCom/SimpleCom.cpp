@@ -51,16 +51,7 @@ static std::tuple<HANDLE, HANDLE> InitConsole(SimpleCom::SerialSetup& setup) {
 	ss << "Current code page: " << GetConsoleCP();
 	SimpleCom::debug::log(ss.str().c_str());
 
-	if (setup.GetUseUTF8()) {
-		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleCP(CP_UTF8), TRUE, __FILE__, __LINE__);
-		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleOutputCP(CP_UTF8), TRUE, __FILE__, __LINE__);
-		TStringStream ss2;
-		ss2 << "Code page changed: " << GetConsoleCP();
-		SimpleCom::debug::log(ss2.str().c_str());
-	}
-
 	DWORD mode;
-
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	if (hStdIn == INVALID_HANDLE_VALUE) {
 		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
@@ -131,6 +122,14 @@ int _tmain(int argc, LPCTSTR argv[])
 	catch (SimpleCom::SerialDeviceScanException& e) {
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -3;
+	}
+
+	if (setup.GetUseUTF8()) {
+		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleCP(CP_UTF8), TRUE, __FILE__, __LINE__);
+		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleOutputCP(CP_UTF8), TRUE, __FILE__, __LINE__);
+		TStringStream ss2;
+		ss2 << "Code page changed: " << GetConsoleCP();
+		SimpleCom::debug::log(ss2.str().c_str());
 	}
 
 	try {
