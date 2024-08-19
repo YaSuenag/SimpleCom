@@ -2,6 +2,7 @@ SimpleCom
 ![CodeQL](../../workflows/CodeQL/badge.svg)
 ![Unit test](../../workflows/Unit%20test/badge.svg)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/YaSuenag/SimpleCom/badge)](https://securityscorecards.dev/viewer/?uri=github.com/YaSuenag/SimpleCom)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8152/badge)](https://www.bestpractices.dev/projects/8152)
 ===================
 
 Console app for serial connection.
