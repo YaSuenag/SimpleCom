@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,13 +32,14 @@ namespace SimpleCom {
 	private:
 		DWORD _error_code;
 		LPCTSTR _error_caption;
-		LPTSTR _error_text;
+		TString _error_text;
 
 	public:
-		explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(const_cast<LPTSTR>(error_text)) {}
+		explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(error_text) {}
 		explicit WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
 		explicit WinAPIException(DWORD error_code, LPCTSTR error_caption);
-		virtual ~WinAPIException();
+		WinAPIException(const WinAPIException &ex) : _error_code(ex._error_code), _error_caption(ex._error_caption), _error_text(ex._error_text) {}
+		virtual ~WinAPIException() {};
 
 		WinAPIException& operator = (WinAPIException& rvalue) = delete;
 
@@ -50,7 +51,7 @@ namespace SimpleCom {
 			return _error_caption;
 		}
 
-		inline LPCTSTR GetErrorText() const noexcept {
+		inline TString GetErrorText() const noexcept {
 			return _error_text;
 		}
 	};

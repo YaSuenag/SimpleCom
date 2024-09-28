@@ -468,7 +468,7 @@ static INT_PTR CALLBACK SettingDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		MessageBox(hDlg, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(hDlg, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
 

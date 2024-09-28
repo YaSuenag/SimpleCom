@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2021, Yasumasa Suenaga
+ * Copyright (C) 2019, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,29 +21,24 @@
 #include "WinAPIException.h"
 #include "debug.h"
 
-static thread_local TCHAR fallback_error_text[100];
-
 
 SimpleCom::WinAPIException::WinAPIException(DWORD error_code, LPCTSTR error_caption) : _error_code(error_code),
-                                                                                       _error_caption(error_caption),
-	                                                                                   _error_text(nullptr)
+                                                                                       _error_caption(error_caption)
 {
-	DWORD result = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, _error_code, 0, reinterpret_cast<LPTSTR>(&_error_text), 0, NULL);
+	LPTSTR buf = nullptr;
+	TStringStream error_msg;
+	DWORD result = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, _error_code, 0, reinterpret_cast<LPTSTR>(&buf), 0, NULL);
 	if (result == 0) {
 		DWORD errcode = GetLastError();
-		_sntprintf_s(fallback_error_text, sizeof(fallback_error_text) / sizeof(TCHAR), _T("Error occured (%#x)"), _error_code);
-		_error_text = fallback_error_text;
+		error_msg << _T("Error occured (") << std::showbase << std::hex << _error_code << _T(")");
 
 		TStringStream msg;
 		msg << _T("Error occurred in FormatMessage (") << std::showbase << std::hex << errcode << _T(")");
 		debug::log(msg.str().c_str());
 	}
-}
-
-
-SimpleCom::WinAPIException::~WinAPIException()
-{
-	if ((_error_text != nullptr) && (_error_text != fallback_error_text) && (_error_code != -1)) {
-		LocalFree(_error_text);
+	else {
+		error_msg << buf << _T(" (") << std::showbase << std::hex << _error_code << _T(")");
+		LocalFree(buf);
 	}
+	_error_text = error_msg.str();
 }

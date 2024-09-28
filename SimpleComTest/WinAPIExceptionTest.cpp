@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -49,7 +49,7 @@ namespace SimpleComTest
 		TEST_METHOD(MessageTest)
 		{
 			SimpleCom::WinAPIException e(TEST_ERRCODE);
-			Assert::AreEqual(expected, e.GetErrorText());
+			Assert::AreEqual(expected, e.GetErrorText().c_str());
 		}
 
 	};

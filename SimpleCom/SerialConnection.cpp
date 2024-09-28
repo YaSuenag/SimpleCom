@@ -189,7 +189,7 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 					return 0;
 				}
 				else {
-					MessageBox(param->parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+					MessageBox(param->parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 					return -1;
 				}
 			}
@@ -275,7 +275,7 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 		SetEvent(hTermEvent);
 		// We can ignore ERROR_OPERATION_ABORTED because it would be intended.
 		if (e.GetErrorCode() != ERROR_OPERATION_ABORTED) {
-			MessageBox(_parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+			MessageBox(_parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
 	}
 

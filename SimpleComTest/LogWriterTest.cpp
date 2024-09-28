@@ -37,7 +37,7 @@ namespace SimpleComTest
 			HANDLE hnd = CreateFile(TESTFILENAME, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hnd == INVALID_HANDLE_VALUE) {
 				SimpleCom::WinAPIException ex(GetLastError());
-				Assert::Fail(ex.GetErrorText());
+				Assert::Fail(ex.GetErrorText().c_str());
 			}
 			DWORD fsize = GetFileSize(hnd, nullptr);
 			char* contents = new char[fsize + 1];

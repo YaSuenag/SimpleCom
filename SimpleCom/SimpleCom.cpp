@@ -112,7 +112,7 @@ int _tmain(int argc, LPCTSTR argv[])
 		setup.SaveToDCB(&dcb);
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -1;
 	}
 	catch (SimpleCom::SerialSetupException& e) {
@@ -157,7 +157,7 @@ int _tmain(int argc, LPCTSTR argv[])
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		MessageBox(parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -4;
 	}
 	catch (SimpleCom::SerialDeviceScanException& e) {
