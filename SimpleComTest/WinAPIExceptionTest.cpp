@@ -49,7 +49,8 @@ namespace SimpleComTest
 		TEST_METHOD(MessageTest)
 		{
 			SimpleCom::WinAPIException e(TEST_ERRCODE);
-			Assert::AreEqual(expected, e.GetErrorText().c_str());
+			Assert::IsTrue(e.GetErrorText().find(expected) != TString::npos);
+			Assert::IsTrue(e.GetErrorText().find(_T("(0x2)")) != TString::npos);  // ERROR_FILE_NOT_FOUND in hex
 		}
 
 	};
