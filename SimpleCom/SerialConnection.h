@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #include "SerialPortWriter.h"
 #include "LogWriter.h"
+#include "WinAPIException.h"
 
 
 namespace SimpleCom {
@@ -36,17 +37,20 @@ namespace SimpleCom {
 		bool _useTTYResizer;
 		LogWriter* _logwriter;
 		bool _enableStdinLogging;
+		concurrency::concurrent_queue<WinAPIException> _exception_queue;
 
 		void InitSerialPort(const HANDLE hSerial);
 		bool ShouldTerminate(SerialPortWriter& writer, const HANDLE hTermEvent);
 		void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SerialPortWriter& writer);
 		bool StdInRedirector(const HANDLE hSerial, const HANDLE hTermEvent);
 
+		friend DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter);
+
 	public:
 		SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging);
 		virtual ~SerialConnection();
 
-		bool DoSession();
+		bool DoSession(bool allowDetachDevice);
 	};
 
 }

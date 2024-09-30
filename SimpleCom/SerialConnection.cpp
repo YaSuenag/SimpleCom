@@ -28,9 +28,7 @@ typedef struct {
 	HANDLE hSerial;
 	OVERLAPPED *overlapped;
 	HANDLE hTermEvent;
-	HWND parent_hwnd;
-	HANDLE hStdOut;
-	SimpleCom::LogWriter* logwriter;
+	SimpleCom::SerialConnection *conn;
 } TStdOutRedirectorParam;
 
 
@@ -40,7 +38,8 @@ SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hw
 	_hStdIn(hStdIn),
 	_hStdOut(hStdOut),
 	_useTTYResizer(useTTYResizer),
-	_enableStdinLogging(enableStdinLogging)
+	_enableStdinLogging(enableStdinLogging),
+	_exception_queue()
 {
 	CopyMemory(&_dcb, dcb, sizeof(_dcb));
 	_logwriter = (logfilename == nullptr) ? nullptr : new LogWriter(logfilename);
@@ -118,11 +117,11 @@ static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapp
 		if (GetLastError() == ERROR_IO_PENDING) {
 			DWORD unused = 0;
 			if (!GetOverlappedResult(hSerial, overlapped, &unused, TRUE)) {
-				throw SimpleCom::WinAPIException(GetLastError(), _T("GetOverlappedResult for WaitCommEvent"));
+				throw SimpleCom::SerialAPIException(GetLastError(), _T("GetOverlappedResult for WaitCommEvent"));
 			}
 		}
 		else {
-			throw SimpleCom::WinAPIException(GetLastError(), _T("WaitCommEvent"));
+			throw SimpleCom::SerialAPIException(GetLastError(), _T("WaitCommEvent"));
 		}
 	}
 
@@ -130,7 +129,7 @@ static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapp
 		DWORD errors;
 		COMSTAT comstat = { 0 };
 		if (!ClearCommError(hSerial, &errors, &comstat)) {
-			throw SimpleCom::WinAPIException(GetLastError(), _T("ClearCommError"));
+			throw SimpleCom::SerialAPIException(GetLastError(), _T("ClearCommError"));
 		}
 
 		char buf[buf_sz] = { 0 };
@@ -141,11 +140,11 @@ static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapp
 			if (!ReadFile(hSerial, buf, min(buf_sz, remainBytes), &nBytesRead, overlapped)) {
 				if (GetLastError() == ERROR_IO_PENDING) {
 					if (!GetOverlappedResult(hSerial, overlapped, &nBytesRead, FALSE)) {
-						throw SimpleCom::WinAPIException(GetLastError(), _T("GetOverlappedResult for ReadFile"));
+						throw SimpleCom::SerialAPIException(GetLastError(), _T("GetOverlappedResult for ReadFile"));
 					}
 				}
 				else {
-					throw SimpleCom::WinAPIException(GetLastError(), _T("ReadFile from serial device"));
+					throw SimpleCom::SerialAPIException(GetLastError(), _T("ReadFile from serial device"));
 				}
 			}
 
@@ -169,7 +168,7 @@ static void StdOutRedirectorLoopInner(const HANDLE hSerial, OVERLAPPED *overlapp
  * Entry point for stdout redirector.
  * stdout redirects serial (read op) to stdout.
  */
-DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
+DWORD WINAPI SimpleCom::StdOutRedirector(_In_ LPVOID lpParameter) {
 	TStdOutRedirectorParam* param = reinterpret_cast<TStdOutRedirectorParam*>(lpParameter);
 
 	while (WaitForSingleObject(param->hTermEvent, 0) != WAIT_OBJECT_0) {
@@ -179,19 +178,13 @@ DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
 				throw SimpleCom::WinAPIException(GetLastError(), _T("ResetEvent for reading data from serial device"));
 			}
 
-			StdOutRedirectorLoopInner(param->hSerial, param->overlapped, param->hStdOut, param->logwriter);
+			StdOutRedirectorLoopInner(param->hSerial, param->overlapped, param->conn->_hStdOut, param->conn->_logwriter);
 		}
 		catch (SimpleCom::WinAPIException& e) {
 			if (WaitForSingleObject(param->hTermEvent, 0) != WAIT_OBJECT_0) {
 				SetEvent(param->hTermEvent);
-				if (e.GetErrorCode() == ERROR_OPERATION_ABORTED) {
-					// We can ignore ERROR_OPERATION_ABORTED because it would be intended.
-					return 0;
-				}
-				else {
-					MessageBox(param->parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-					return -1;
-				}
+				param->conn->_exception_queue.push(e);
+				break;
 			}
 		}
 	}
@@ -270,13 +263,9 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 		}
 	}
 	catch (SimpleCom::WinAPIException& e) {
-		// Fire terminate event before MessageBox is shown
-		// because other threads should be terminated immediately.
+		// Fire terminate event because other threads should be terminated immediately.
 		SetEvent(hTermEvent);
-		// We can ignore ERROR_OPERATION_ABORTED because it would be intended.
-		if (e.GetErrorCode() != ERROR_OPERATION_ABORTED) {
-			MessageBox(_parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		}
+		_exception_queue.push(e);
 	}
 
 	writer.Shutdown();
@@ -285,9 +274,12 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 
 /*
  * Talk with peripheral.
+ * Set true to allowDetachDevice if the function would be finished silently when serial controller is detached.
  * Return true if F1 key is pushed (active close).
  */
-bool SimpleCom::SerialConnection::DoSession() {
+bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice) {
+	_exception_queue.clear();
+
 	HandleHandler hSerial(CreateFile(_device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), _T("Open serial port"));
 	InitSerialPort(hSerial.handle());
 
@@ -301,9 +293,7 @@ bool SimpleCom::SerialConnection::DoSession() {
 		.hSerial = hSerial.handle(),
 		.overlapped = &serialReadOverlapped,
 		.hTermEvent = hTermEvent.handle(),
-		.parent_hwnd = this->_parent_hwnd,
-		.hStdOut = this->_hStdOut,
-		.logwriter = this->_logwriter
+		.conn = this
 	};
 	HandleHandler threadHnd(CreateThread(NULL, 0, &StdOutRedirector, &param, 0, NULL), _T("CreateThread for StdOutRedirector"));
 
@@ -314,6 +304,28 @@ bool SimpleCom::SerialConnection::DoSession() {
 	// It means end of serial communication. So we should terminate stdout redirector.
 	CALL_WINAPI_WITH_DEBUGLOG(CancelIoEx(hSerial.handle(), &serialReadOverlapped), TRUE, __FILE__, __LINE__)
 	WaitForSingleObject(threadHnd.handle(), INFINITE);
+
+	WinAPIException ex;
+	while (_exception_queue.try_pop(ex)) {
+		switch (ex.GetErrorCode()) {
+		// Intended - this error would be reported when the user finishes the session.
+		case ERROR_OPERATION_ABORTED:
+			continue;
+
+		// Following error codes would be reported when serial controller is detached.
+		// https://github.com/microsoft/referencesource/blob/51cf7850defa8a17d815b4700b67116e3fa283c2/System/sys/system/IO/ports/SerialStream.cs#L1739-L1748
+		case ERROR_ACCESS_DENIED:
+		case ERROR_BAD_COMMAND:
+		case ERROR_DEVICE_REMOVED:
+			if (allowDetachDevice) {
+				continue;
+			}
+			[[fallthrough]];
+
+		default:
+			MessageBox(_parent_hwnd, ex.GetErrorText().c_str(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		}
+	}
 
 	return exited;
 }

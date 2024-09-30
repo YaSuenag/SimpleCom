@@ -35,13 +35,12 @@ namespace SimpleCom {
 		TString _error_text;
 
 	public:
-		explicit WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(error_text) {}
-		explicit WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
-		explicit WinAPIException(DWORD error_code, LPCTSTR error_caption);
-		WinAPIException(const WinAPIException &ex) : _error_code(ex._error_code), _error_caption(ex._error_caption), _error_text(ex._error_text) {}
+		WinAPIException() : _error_code(-1), _error_caption(nullptr), _error_text() {}
+		WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(error_text) {}
+		WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
+		WinAPIException(DWORD error_code, LPCTSTR error_caption);
+		WinAPIException(const WinAPIException& ex) : _error_code(ex._error_code), _error_caption(ex._error_caption), _error_text(ex._error_text) {}
 		virtual ~WinAPIException() {};
-
-		WinAPIException& operator = (WinAPIException& rvalue) = delete;
 
 		inline DWORD GetErrorCode() const noexcept {
 			return _error_code;
@@ -54,6 +53,18 @@ namespace SimpleCom {
 		inline TString GetErrorText() const noexcept {
 			return _error_text;
 		}
+	};
+
+	/*
+	 * Exception class for Windows API error which relates to serial communication.
+	 */
+	class SerialAPIException : public WinAPIException
+	{
+	public:
+		SerialAPIException(DWORD error_code) : WinAPIException(error_code) {}
+		SerialAPIException(DWORD error_code, LPCTSTR error_caption) : WinAPIException(error_code, error_caption) {}
+		SerialAPIException(const SerialAPIException& ex) : WinAPIException(ex) {}
+		virtual ~SerialAPIException() {};
 	};
 
 }
