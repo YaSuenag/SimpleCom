@@ -317,7 +317,9 @@ bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice) {
 		case ERROR_ACCESS_DENIED:
 		case ERROR_BAD_COMMAND:
 		case ERROR_DEVICE_REMOVED:
-			if (allowDetachDevice) {
+			if (ex.IsSerialAPIException() && allowDetachDevice) {
+				debug::log(_T("SerialAPIException occurred, but error dialog was suppressed because allowDetachDevice is false."));
+				debug::log(ex.GetErrorText().c_str());
 				continue;
 			}
 			[[fallthrough]];
