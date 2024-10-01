@@ -39,7 +39,6 @@ namespace SimpleCom {
 		WinAPIException(LPCTSTR error_caption, LPCTSTR error_text) : _error_code(-1), _error_caption(error_caption), _error_text(error_text) {}
 		WinAPIException(DWORD error_code) : WinAPIException(error_code, _T("SimpleCom")) {}
 		WinAPIException(DWORD error_code, LPCTSTR error_caption);
-		WinAPIException(const WinAPIException& ex) : _error_code(ex._error_code), _error_caption(ex._error_caption), _error_text(ex._error_text) {}
 		virtual ~WinAPIException() {};
 
 		virtual bool IsSerialAPIException() {
@@ -67,7 +66,6 @@ namespace SimpleCom {
 	public:
 		SerialAPIException(DWORD error_code) : WinAPIException(error_code) {}
 		SerialAPIException(DWORD error_code, LPCTSTR error_caption) : WinAPIException(error_code, error_caption) {}
-		SerialAPIException(const SerialAPIException& ex) : WinAPIException(ex) {}
 		virtual ~SerialAPIException() {};
 
 		virtual bool IsSerialAPIException() {
