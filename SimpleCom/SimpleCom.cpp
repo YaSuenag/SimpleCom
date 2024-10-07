@@ -144,7 +144,7 @@ int _tmain(int argc, LPCTSTR argv[])
 			WriteConsole(hStdOut, CLEAR_CONSOLE_COMMAND, CLEAR_CONSOLE_COMMAND_LEN, nullptr, nullptr);
 
 			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, hStdIn, hStdOut, setup.GetUseTTYResizer(), setup.GetLogFile(), setup.IsEnableStdinLogging());
-			bool exited = conn.DoSession();
+			bool exited = conn.DoSession(setup.GetAutoReconnect());
 
 			if (setup.GetAutoReconnect() && !exited) {
 				SimpleCom::debug::log(_T("Sleep before reconnecting..."));

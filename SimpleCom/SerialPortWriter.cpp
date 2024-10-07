@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, 2022, Yasumasa Suenaga
+ * Copyright (C) 2021, 2024, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -62,7 +62,7 @@ void SimpleCom::SerialPortWriter::WriteAsync()
 	DWORD last_error = GetLastError();
 
 	if (!result && (last_error != ERROR_IO_PENDING)) {
-		throw WinAPIException(last_error);
+		throw SerialAPIException(last_error);
 	}
 
 	_buf_idx = 0;
@@ -89,6 +89,6 @@ void SimpleCom::SerialPortWriter::PutData(const char *data, const int len) {
 	DWORD last_error = GetLastError();
 
 	if (!result && (last_error != ERROR_IO_PENDING)) {
-		throw WinAPIException(last_error);
+		throw SerialAPIException(last_error);
 	}
 }
