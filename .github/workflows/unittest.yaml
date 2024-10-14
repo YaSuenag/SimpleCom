@@ -19,11 +19,18 @@ jobs:
     - name: Setup msbuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Setup VSTest Path
-      uses: darenm/Setup-VSTest@v1.3
-
     - name: Build unit test
       run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug" -property:"Platform=x64"
 
+    - name: Generate vcvars path
+      run: |
+        $installPath = & vswhere.exe '-property' installationPath
+        $vcvarsPath = $installPath + '\VC\Auxiliary\Build\vcvars64.bat'
+        "VCVARS_PATH=$vcvarsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+      shell: pwsh
+
     - name: Run unit test
-      run: vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
+      run: |
+        call "${{ env.VCVARS_PATH }}"
+        vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
+      shell: cmd
