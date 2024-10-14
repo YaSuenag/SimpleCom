@@ -91,7 +91,10 @@ jobs:
         queries: security-extended,security-and-quality
 
     - name: Build TTY Resizer
-      run: make -C tty-resizer
+      working-directory: tty-resizer
+      run: |
+        bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
