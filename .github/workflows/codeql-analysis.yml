@@ -61,38 +61,40 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
 
-#
+
 # analyze-tty-resizer should be activated when Linux GH runner has v6.0 kernel or later.
 #    https://github.com/torvalds/linux/commit/fcb14cb1bdacec5b4374fe161e83fb8208164a85
-#
-#  analyze-tty-resizer:
-#    runs-on: ubuntu-latest
-#    permissions:
-#      actions: read
-#      contents: read
-#      security-events: write
-#
-#    strategy:
-#      fail-fast: false
-#
-#    steps:
-#    - name: Setup
-#      run: |
-#        sudo apt-get update
-#        sudo apt-get install -y libbpf-dev linux-tools-common
-#
-#    - name: Checkout repository
-#      uses: actions/checkout@v4.1.1
-#
-#    # Initializes the CodeQL tools for scanning.
-#    - name: Initialize CodeQL
-#      uses: github/codeql-action/init@v3
-#      with:
-#        languages: cpp
-#        queries: security-extended,security-and-quality
-#
-#    - name: Build TTY Resizer
-#      run: make -C tty-resizer
-#
-#    - name: Perform CodeQL Analysis
-#      uses: github/codeql-action/analyze@v3
+  analyze-tty-resizer:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libbpf-dev linux-tools-common
+
+    - name: Checkout repository
+      uses: actions/checkout@v4.1.1
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+        queries: security-extended,security-and-quality
+
+    - name: Build TTY Resizer
+      working-directory: tty-resizer
+      run: |
+        bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
+        make
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
