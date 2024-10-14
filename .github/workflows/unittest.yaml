@@ -26,7 +26,7 @@ jobs:
       run: |
         $installPath = & vswhere.exe '-property' installationPath
         $vcvarsPath = $installPath + '\VC\Auxiliary\Build\vcvars64.bat'
-        "VCVARS_PATH=$disablePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCVARS_PATH=$vcvarsPath" | Out-File -FilePath $env:GITHUB_ENV -Append
       shell: pwsh
 
     - name: Run unit test
