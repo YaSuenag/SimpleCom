@@ -22,9 +22,15 @@ jobs:
     - name: Build unit test
       run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug" -property:"Platform=x64"
 
-    - name: Run unit test
-      shell: cmd
+    - name: Generate vcvars path
       run: |
-        for /f "delims=" %i in ('vswhere.exe -latest -property installationPath') do set VSPath=%i
-        call "%VSPath%\VC\Auxiliary\Build\vcvars64.bat"
+        $installPath = & vswhere.exe '-property' installationPath
+        $vcvarsPath = $installPath + '\VC\Auxiliary\Build\vcvars64.bat'
+        "VCVARS_PATH=$disablePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+      shell: pwsh
+
+    - name: Run unit test
+      run: |
+        call "${{ env.VCVARS_PATH }}"
         vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
+      shell: cmd
