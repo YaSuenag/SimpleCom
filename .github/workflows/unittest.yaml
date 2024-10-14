@@ -19,11 +19,12 @@ jobs:
     - name: Setup msbuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Setup VSTest Path
-      uses: darenm/Setup-VSTest@v1.3
-
     - name: Build unit test
       run: msbuild SimpleComTest\SimpleComTest.vcxproj -property:"Configuration=Debug" -property:"Platform=x64"
 
     - name: Run unit test
-      run: vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
+      shell: cmd
+      run: |
+        for /f "delims=" %i in ('vswhere.exe -latest -property installationPath') do set VSPath=%i
+        call "%VSPath%\VC\Auxiliary\Build\vcvars64.bat"
+        vstest.console.exe /Platform:x64 SimpleComTest\x64\Debug\SimpleComTest.dll
