@@ -19,7 +19,9 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <bpf/libbpf.h>
@@ -27,7 +29,7 @@
 #include "common.h"
 
 
-static const char *ttypath;
+static char ttypath[PATH_MAX];
 static ino_t tty_ino;
 static struct tty_resizer_bpf *skel = NULL;
 static struct ring_buffer *rb = NULL;
@@ -119,14 +121,19 @@ static int setup_bpf(){
 int main(int argc, char *argv[]){
   if((argc == 3) && (strcmp(argv[1], "-v") == 0)){
     libbpf_set_print(libbpf_print);
-    ttypath = argv[2];
+    realpath(argv[2], ttypath);
   }
   else if(argc == 2){
-    ttypath = argv[1];
+    realpath(argv[1], ttypath);
   }
   else{
     printf("Usage: %s <-v> [TTY device file]\n", argv[0]);
     return -100;
+  }
+
+  if(strncmp(ttypath, "/dev/tty", 8) != 0){
+    fprintf(stderr, "Not a valid TTY device: %s\n", ttypath);
+    return -150;
   }
 
   if((setup_tty() == 0) && (setup_bpf() == 0)){
