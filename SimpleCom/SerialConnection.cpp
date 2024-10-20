@@ -31,6 +31,8 @@ typedef struct {
 	SimpleCom::SerialConnection *conn;
 } TStdOutRedirectorParam;
 
+static COORD current_window_sz = { 0 };
+
 
 SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, HANDLE hStdIn, HANDLE hStdOut, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging) :
 	_device(device),
@@ -237,8 +239,10 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 						ProcessKeyEvents(inputs[idx].Event.KeyEvent, writer);
 					}
 					else if ((inputs[idx].EventType == WINDOW_BUFFER_SIZE_EVENT) && _useTTYResizer) {
-						CopyMemory(&newConsoleSize, &inputs[idx].Event.WindowBufferSizeEvent, sizeof(COORD));
-						isConsoleSizeUpdated = true;
+						if(memcmp(&current_window_sz, &inputs[idx].Event.WindowBufferSizeEvent.dwSize, sizeof(COORD)) != 0) {
+							newConsoleSize = inputs[idx].Event.WindowBufferSizeEvent.dwSize;
+							isConsoleSizeUpdated = true;
+						}
 					}
 
 					if (isConsoleSizeUpdated) {
@@ -248,6 +252,7 @@ bool SimpleCom::SerialConnection::StdInRedirector(const HANDLE hSerial, const HA
 							int len = snprintf(buf, sizeof(buf), "%c%d" RESIZER_SEPARATOR "%d%c", RESIZER_START_MARKER, newConsoleSize.Y, newConsoleSize.X, RESIZER_END_MARKER);
 							writer.PutData(buf, len);
 							isConsoleSizeUpdated = false;
+							current_window_sz = newConsoleSize;
 						}
 					}
 				}
@@ -287,6 +292,10 @@ bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice) {
 	HandleHandler hTermEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination"));
 	OVERLAPPED serialReadOverlapped = { 0 };
 	serialReadOverlapped.hEvent = hIoEvent.handle();
+
+	CONSOLE_SCREEN_BUFFER_INFO console_info = { 0 };
+	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleScreenBufferInfo(_hStdOut, &console_info), TRUE, __FILE__, __LINE__)
+	current_window_sz = console_info.dwSize;
 
 	// Create stdout redirector
 	TStdOutRedirectorParam param = {
