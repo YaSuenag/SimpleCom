@@ -63,7 +63,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Create PR
-        uses: vedantmgoyal2009/winget-releaser@v2
+        uses: vedantmgoyal9/winget-releaser@main
         with:
           identifier: YaSuenag.SimpleCom
           installers-regex: '\.msi$'
