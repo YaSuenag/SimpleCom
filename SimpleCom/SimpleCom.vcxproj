@@ -186,6 +186,7 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TerminalRedirector.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="WinAPIException.cpp" />
   </ItemGroup>
@@ -201,6 +202,8 @@
     <ClInclude Include="SerialPortWriter.h" />
     <ClInclude Include="SerialSetup.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TerminalRedirector.h" />
+    <ClInclude Include="TerminalRedirectorBase.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="WinAPIException.h" />
   </ItemGroup>

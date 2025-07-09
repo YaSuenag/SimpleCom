@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2024, Yasumasa Suenaga
+ * Copyright (C) 2019, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,9 +24,6 @@
 #include "WinAPIException.h"
 #include "debug.h"
 
-static LPCTSTR CLEAR_CONSOLE_COMMAND = _T("\x1b[2J");
-static DWORD CLEAR_CONSOLE_COMMAND_LEN = static_cast<DWORD>(_tcslen(CLEAR_CONSOLE_COMMAND));
-
 
 static HWND GetParentWindow() {
 	HWND current = GetConsoleWindow();
@@ -49,37 +46,10 @@ static HWND GetParentWindow() {
 
 }
 
-static std::tuple<HANDLE, HANDLE> InitConsole(SimpleCom::SerialSetup& setup) {
-	TStringStream ss;
-	ss << "Current code page: " << GetConsoleCP();
-	SimpleCom::debug::log(ss.str().c_str());
-
-	DWORD mode;
-	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	if (hStdIn == INVALID_HANDLE_VALUE) {
-		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdin)"));
-	}
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdIn, &mode), TRUE, __FILE__, __LINE__)
-	mode &= ~ENABLE_PROCESSED_INPUT;
-	mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdIn, mode), TRUE, __FILE__, __LINE__)
-
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hStdOut == INVALID_HANDLE_VALUE) {
-		throw SimpleCom::WinAPIException(GetLastError(), _T("GetStdHandle(stdout)"));
-	}
-	CALL_WINAPI_WITH_DEBUGLOG(GetConsoleMode(hStdOut, &mode), TRUE, __FILE__, __LINE__);
-	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-	CALL_WINAPI_WITH_DEBUGLOG(SetConsoleMode(hStdOut, mode), TRUE, __FILE__, __LINE__);
-
-	return { hStdIn, hStdOut };
-}
-
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
 	TString device;
-	std::tuple<HANDLE, HANDLE> std_handles;
 	HWND parent_hwnd = GetParentWindow();
 	SimpleCom::SerialSetup setup;
 
@@ -93,8 +63,6 @@ int _tmain(int argc, LPCTSTR argv[])
 			// GUI mode
 			setup.SetShowDialog(true);
 		}
-
-		std_handles = InitConsole(setup);
 
 		if (setup.GetWaitDevicePeriod() > 0) {
 			setup.GetDeviceScanner().SetTargetPort(setup.GetPort());
@@ -137,16 +105,11 @@ int _tmain(int argc, LPCTSTR argv[])
 
 	try {
 		while (true) {
-			HANDLE hStdIn = std::get<0>(std_handles);
-			HANDLE hStdOut = std::get<1>(std_handles);
 
-			// Clear console
-			WriteConsole(hStdOut, CLEAR_CONSOLE_COMMAND, CLEAR_CONSOLE_COMMAND_LEN, nullptr, nullptr);
+			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, setup.GetUseTTYResizer(), setup.GetLogFile(), setup.IsEnableStdinLogging());
+			bool reattachable = conn.DoSession(setup.GetAutoReconnect());
 
-			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, hStdIn, hStdOut, setup.GetUseTTYResizer(), setup.GetLogFile(), setup.IsEnableStdinLogging());
-			bool exited = conn.DoSession(setup.GetAutoReconnect());
-
-			if (setup.GetAutoReconnect() && !exited) {
+			if (setup.GetAutoReconnect() && reattachable) {
 				SimpleCom::debug::log(_T("Sleep before reconnecting..."));
 				Sleep(setup.GetAutoReconnectPauseInSec() * 1000);
 

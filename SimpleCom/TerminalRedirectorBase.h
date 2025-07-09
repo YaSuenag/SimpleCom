@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2025, Yasumasa Suenaga
+ * Copyright (C) 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,27 +20,23 @@
 
 #include "stdafx.h"
 #include "LogWriter.h"
+#include "WinAPIException.h"
 
 
-namespace SimpleCom {
-
-	class SerialConnection
+namespace SimpleCom
+{
+	class TerminalRedirectorBase
 	{
-	private:
-		TString _device;
-		DCB _dcb;
-		HWND _parent_hwnd;
-		bool _useTTYResizer;
-		LogWriter* _logwriter;
-		bool _enableStdinLogging;
-
-		void InitSerialPort(const HANDLE hSerial);
+	protected:
+		HANDLE _hSerial;
 
 	public:
-		SerialConnection(TString& device, DCB* dcb, HWND hwnd, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging);
-		virtual ~SerialConnection() {};
+		TerminalRedirectorBase(HANDLE hSerial) : _hSerial(hSerial) {};
+		virtual ~TerminalRedirectorBase() {};
 
-		bool DoSession(bool allowDetachDevice);
+		virtual void StartRedirector() = 0;
+
+		// Returns true if the peripheral is reattachable.
+		virtual bool AwaitTermination() = 0;
 	};
-
 }

@@ -26,6 +26,7 @@
 #include <string>
 #include <codecvt>
 #include <concurrent_queue.h>
+#include <functional>
 
 #ifdef _UNICODE
 typedef std::wstring TString;
