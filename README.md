@@ -19,6 +19,7 @@ Console app for serial connection.
         * `COM[N]` is mandatory to specify serial port
 4. Operate target device via the console
 5. Press F1 to leave its serial session and to finish SimpleCom
+    * Press CTRL+C in batch mode
 
 ## Command line options
 
@@ -38,6 +39,7 @@ Console app for serial connection.
 | `--auto-reconnect-timeout [num]` | 120 | Reconnect timeout |
 | `--log-file [logfile]` | &lt;none&gt; | Log serial communication to file |
 | `--stdin-logging` | false | Enable stdin logging<br><br>⚠️Possible to be logged each chars duplicately due to echo back from the console when this option is set, and also secrets (e.g. passphrase) typed into the console will be logged even if it is not shown on the console. |
+| `--batch` | false | Perform in batch mode<br><br>⚠️You have to set serial port in command line arguments, and you cannot set with `--show-dialog`, `--tty-resizer`, `--auto-reconnect`, `--log-file`. |
 | `--help` | - | Show help message |
 
 # How to build
@@ -69,7 +71,8 @@ Please see [Applications installed from the web](https://docs.microsoft.com/ja-j
 # Notes
 
 * SimpleCom sends / receives VT100 escape sequences. So the serial device to connect via SimpleCom needs to support VT100 or compatible shell.
-* F1 key is hooked by SimpleCom, so escase sequence of F1 (`ESC O P`) would not be propagated.
+* F1 key is hooked by SimpleCom (in interactive mode (default)), so escase sequence of F1 (`ESC O P`) would not be propagated.
+    * In batch mode, F1 would propergate to peripheral.
 * SimpleCom supports ANSI chars only, so it would not work if multibyte chars (e.g. CJK chars) are given.
 * Run [resize](https://linux.die.net/man/1/resize) provided by xterm if you want to align VT size of Linux box with your console window.
 

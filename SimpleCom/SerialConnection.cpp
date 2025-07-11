@@ -20,6 +20,7 @@
 #include "SerialConnection.h"
 #include "util.h"
 #include "TerminalRedirector.h"
+#include "BatchRedirector.h"
 #include "debug.h"
 #include "../common/common.h"
 
@@ -27,18 +28,12 @@ static constexpr int buf_sz = 256;
 
 
 
-SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, HWND hwnd, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging) :
+SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, LPCTSTR logfilename, bool enableStdinLogging) :
 	_device(device),
-	_parent_hwnd(hwnd),
-	_useTTYResizer(useTTYResizer),
 	_enableStdinLogging(enableStdinLogging)
 {
 	CopyMemory(&_dcb, dcb, sizeof(_dcb));
 	_logwriter = (logfilename == nullptr) ? nullptr : new LogWriter(logfilename);
-
-	if (_enableStdinLogging && (_logwriter == nullptr)) {
-		throw _T("Logger was not set up in spite of stdin logging was enabled.");
-	}
 }
 
 void SimpleCom::SerialConnection::InitSerialPort(const HANDLE hSerial) {
@@ -67,14 +62,14 @@ void SimpleCom::SerialConnection::InitSerialPort(const HANDLE hSerial) {
  * Talk with peripheral.
  * Set true to allowDetachDevice if the function would be finished silently when serial controller is detached.
  */
-bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice) {
+bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice, bool useTTYResizer, HWND parent_hwnd) {
 	HandleHandler hSerial(CreateFile(_device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), _T("Open serial port"));
 	InitSerialPort(hSerial.handle());
 
-	TerminalRedirector redirector(hSerial.handle(), _logwriter, _enableStdinLogging, _useTTYResizer, _parent_hwnd);
+	TerminalRedirector redirector(hSerial.handle(), _logwriter, _enableStdinLogging, useTTYResizer, parent_hwnd);
 	redirector.StartRedirector();
 
-	bool reattachable = redirector.AwaitTermination();
+	redirector.AwaitTermination();
 
 	WinAPIException ex;
 	while (redirector.exception_queue().try_pop(ex)) {
@@ -96,9 +91,19 @@ bool SimpleCom::SerialConnection::DoSession(bool allowDetachDevice) {
 			[[fallthrough]];
 
 		default:
-			MessageBox(_parent_hwnd, ex.GetErrorText().c_str(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
+			MessageBox(parent_hwnd, ex.GetErrorText().c_str(), ex.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		}
 	}
 
-	return reattachable;
+	return redirector.Reattachable();
+}
+
+void SimpleCom::SerialConnection::DoBatch() {
+	HandleHandler hSerial(CreateFile(_device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL), _T("Open serial port"));
+	InitSerialPort(hSerial.handle());
+
+	BatchRedirector redirector(hSerial.handle());
+
+	redirector.StartRedirector();
+	redirector.AwaitTermination();
 }

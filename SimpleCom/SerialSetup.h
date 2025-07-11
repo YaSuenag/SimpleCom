@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2024, Yasumasa Suenaga
+ * Copyright (C) 2019, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -80,6 +80,8 @@ namespace SimpleCom {
 		TString     _port;
 		SerialDeviceScanner _scanner;
 		std::map<TString, CommandlineOptionBase*> _options;
+
+		void Validate();
 
 	public:
 		SerialSetup();
@@ -199,6 +201,14 @@ namespace SimpleCom {
 
 		inline bool IsEnableStdinLogging() {
 			return static_cast<CommandlineOption<bool>*>(_options[_T("--stdin-logging")])->get();
+		}
+
+		inline void SetBatchMode(bool enabled) {
+			static_cast<CommandlineOption<bool>*>(_options[_T("--batch")])->set(enabled);
+		}
+
+		inline bool IsBatchMode() {
+			return static_cast<CommandlineOption<bool>*>(_options[_T("--batch")])->get();
 		}
 
 		inline SerialDeviceScanner& GetDeviceScanner() {

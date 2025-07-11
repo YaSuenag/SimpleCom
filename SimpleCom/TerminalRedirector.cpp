@@ -35,7 +35,7 @@ static DWORD CLEAR_CONSOLE_COMMAND_LEN = static_cast<DWORD>(_tcslen(CLEAR_CONSOL
  * stdout redirects serial (read op) to stdout.
  */
 DWORD WINAPI StdOutRedirector(_In_ LPVOID lpParameter) {
-	TStdOutRedirectorParam* param = reinterpret_cast<TStdOutRedirectorParam*>(lpParameter);
+	SimpleCom::TStdOutRedirectorParam* param = reinterpret_cast<SimpleCom::TStdOutRedirectorParam*>(lpParameter);
 
 	while (WaitForSingleObject(param->hTermEvent, 0) != WAIT_OBJECT_0) {
 		try {
@@ -150,7 +150,7 @@ static void ProcessKeyEvents(const KEY_EVENT_RECORD keyevent, SimpleCom::SerialP
  * Return true if F1 key is pushed (active close).
  */
 DWORD WINAPI StdInRedirector(_In_ LPVOID lpParameter) {
-	TStdInRedirectorParam* param = reinterpret_cast<TStdInRedirectorParam*>(lpParameter);
+	SimpleCom::TStdInRedirectorParam* param = reinterpret_cast<SimpleCom::TStdInRedirectorParam*>(lpParameter);
 	INPUT_RECORD inputs[buf_sz];
 	DWORD n_read;
 
@@ -239,8 +239,6 @@ SimpleCom::TerminalRedirector::TerminalRedirector(HANDLE hSerial, SimpleCom::Log
 	_hTermEvent(CreateEvent(NULL, TRUE, FALSE, NULL), _T("CreateEvent for thread termination")),
 	_hIoEvent(CreateEvent(NULL, TRUE, TRUE, NULL), _T("CreateEvent for reading from serial device")),
 	_exception_queue(),
-	_hThreadStdIn(INVALID_HANDLE_VALUE),
-	_hThreadStdOut(INVALID_HANDLE_VALUE),
 	_reattachable(true)
 {
 	TStringStream ss;
@@ -288,24 +286,21 @@ SimpleCom::TerminalRedirector::TerminalRedirector(HANDLE hSerial, SimpleCom::Log
 	};
 }
 
+std::tuple<LPTHREAD_START_ROUTINE, LPVOID> SimpleCom::TerminalRedirector::GetStdInRedirector() {
+	return { &StdInRedirector, &_stdin_param };
+}
+
+std::tuple<LPTHREAD_START_ROUTINE, LPVOID> SimpleCom::TerminalRedirector::GetStdOutRedirector() {
+	return { &StdOutRedirector, &_stdout_param };
+}
+
 void SimpleCom::TerminalRedirector::StartRedirector(){
 	// Clear console
 	WriteConsole(_stdout_param.hStdOut, CLEAR_CONSOLE_COMMAND, CLEAR_CONSOLE_COMMAND_LEN, nullptr, nullptr);
 
-	_hThreadStdIn = CreateThread(NULL, 0, &StdInRedirector, &_stdin_param, 0, NULL);
-	if (GetLastError() != ERROR_SUCCESS) {
-		throw SimpleCom::WinAPIException(GetLastError(), _T("CreateThread for StdInRedirector"));
-	}
-
-	_hThreadStdOut = CreateThread(NULL, 0, &StdOutRedirector, &_stdout_param, 0, NULL);
-	if (GetLastError() != ERROR_SUCCESS) {
-		throw SimpleCom::WinAPIException(GetLastError(), _T("CreateThread for StdOutRedirector"));
-	}
+	TerminalRedirectorBase::StartRedirector();
 }
 
-bool SimpleCom::TerminalRedirector::AwaitTermination() {
-	HANDLE objs[] = { _hThreadStdIn, _hThreadStdOut };
-	WaitForMultipleObjects(sizeof(objs) / sizeof(HANDLE), objs, TRUE, INFINITE);
-
+bool SimpleCom::TerminalRedirector::Reattachable() {
 	return _reattachable;
 }

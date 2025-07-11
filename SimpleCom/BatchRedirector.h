@@ -17,33 +17,22 @@
  * 02110-1301, USA.
  */
 #pragma once
-
 #include "stdafx.h"
-#include "LogWriter.h"
-#include "WinAPIException.h"
+#include "TerminalRedirectorBase.h"
 
+namespace SimpleCom {
 
-namespace SimpleCom
-{
-	class TerminalRedirectorBase
-	{
-	protected:
-		HANDLE _hSerial;
-		HANDLE _hThreadStdIn;
-		HANDLE _hThreadStdOut;
+    class BatchRedirector :
+        public TerminalRedirectorBase
+    {
+    protected:
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdInRedirector() override;
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdOutRedirector() override;
 
-		virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdInRedirector() = 0;
-		virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdOutRedirector() = 0;
+    public:
+        BatchRedirector(HANDLE hSerial) : TerminalRedirectorBase(hSerial) {};
+		virtual ~BatchRedirector() {};
+    };
 
-	public:
-		TerminalRedirectorBase(HANDLE hSerial) : _hSerial(hSerial), _hThreadStdIn(INVALID_HANDLE_VALUE), _hThreadStdOut(INVALID_HANDLE_VALUE) {};
-		virtual ~TerminalRedirectorBase() {};
-
-		virtual void StartRedirector();
-
-		// Returns true if the peripheral is reattachable.
-		virtual void AwaitTermination();
-
-		virtual bool Reattachable();
-	};
 }
+

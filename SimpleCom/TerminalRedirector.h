@@ -22,30 +22,30 @@
 #include "TerminalRedirectorBase.h"
 #include "util.h"
 
-typedef struct {
-    HANDLE hSerial;
-    HANDLE hStdOut;
-    OVERLAPPED overlapped;
-    SimpleCom::LogWriter* logwriter;
-    HANDLE hTermEvent;
-    std::function<void(const SimpleCom::WinAPIException&)> exception_handler;
-} TStdOutRedirectorParam;
-
-typedef struct {
-    HANDLE hSerial;
-    HANDLE hStdIn;
-	HANDLE hStdOut;
-    bool enableStdinLogging;
-    SimpleCom::LogWriter* logwriter;
-    bool useTTYResizer;
-    HWND parent_hwnd;
-    HANDLE hTermEvent;
-    std::function<void(const SimpleCom::WinAPIException&)> exception_handler;
-    bool* reattachable;
-} TStdInRedirectorParam;
-
 namespace SimpleCom
 {
+    typedef struct {
+        HANDLE hSerial;
+        HANDLE hStdOut;
+        OVERLAPPED overlapped;
+        SimpleCom::LogWriter* logwriter;
+        HANDLE hTermEvent;
+        std::function<void(const SimpleCom::WinAPIException&)> exception_handler;
+    } TStdOutRedirectorParam;
+
+    typedef struct {
+        HANDLE hSerial;
+        HANDLE hStdIn;
+        HANDLE hStdOut;
+        bool enableStdinLogging;
+        SimpleCom::LogWriter* logwriter;
+        bool useTTYResizer;
+        HWND parent_hwnd;
+        HANDLE hTermEvent;
+        std::function<void(const SimpleCom::WinAPIException&)> exception_handler;
+        bool* reattachable;
+    } TStdInRedirectorParam;
+
     class TerminalRedirector :
         public TerminalRedirectorBase
     {
@@ -53,11 +53,13 @@ namespace SimpleCom
         HandleHandler _hTermEvent;
         HandleHandler _hIoEvent;
         concurrency::concurrent_queue<WinAPIException> _exception_queue;
-        TStdInRedirectorParam _stdin_param;
-		TStdOutRedirectorParam _stdout_param;
-        HANDLE _hThreadStdIn;
-        HANDLE _hThreadStdOut;
         bool _reattachable;
+        TStdInRedirectorParam _stdin_param;
+        TStdOutRedirectorParam _stdout_param;
+
+    protected:
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdInRedirector() override;
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdOutRedirector() override;
 
     public:
         TerminalRedirector(HANDLE hSerial, LogWriter* logwriter, bool enableStdinLogging, bool useTTYResizer, HWND parent_hwnd);
@@ -67,7 +69,7 @@ namespace SimpleCom
             return _exception_queue;
 		}
 
-        void StartRedirector() final;
-        bool AwaitTermination() final;
+        void StartRedirector() override;
+        bool Reattachable() override;
     };
 }

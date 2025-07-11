@@ -46,6 +46,50 @@ static HWND GetParentWindow() {
 
 }
 
+static int DoInteractiveMode(TString& device, DCB *dcb, SimpleCom::SerialSetup &setup, HWND parent_hwnd) {
+	try {
+		while (true) {
+			SimpleCom::SerialConnection conn(device, dcb, setup.GetLogFile(), setup.IsEnableStdinLogging());
+			bool reattachable = conn.DoSession(setup.GetAutoReconnect(), setup.GetUseTTYResizer(), parent_hwnd);
+
+			if (setup.GetAutoReconnect() && reattachable) {
+				SimpleCom::debug::log(_T("Sleep before reconnecting..."));
+				Sleep(setup.GetAutoReconnectPauseInSec() * 1000);
+
+				SimpleCom::debug::log(_T("Reconnect start"));
+				SimpleCom::SerialDeviceScanner scanner;
+				scanner.SetTargetPort(setup.GetPort());
+				RegDisablePredefinedCacheEx();
+				scanner.WaitSerialDevices(parent_hwnd, setup.GetAutoReconnectTimeoutInSec());
+				if (scanner.GetDevices().empty()) {
+					throw SimpleCom::SerialDeviceScanException(_T("Waiting for serial device"), _T("Serial device is not available"));
+				}
+				SimpleCom::debug::log(_T("Reconnect device found"));
+			}
+			else {
+				break;
+			}
+		}
+	}
+	catch (SimpleCom::WinAPIException& e) {
+		MessageBox(parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		return -4;
+	}
+	catch (SimpleCom::SerialDeviceScanException& e) {
+		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
+		return -5;
+	}
+
+	return 0;
+}
+
+static int DoBatchMode(TString& device, DCB* dcb) {
+	SimpleCom::SerialConnection conn(device, dcb);
+	conn.DoBatch();
+
+	return 0;
+}
+
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
@@ -94,6 +138,13 @@ int _tmain(int argc, LPCTSTR argv[])
 		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
 		return -3;
 	}
+	catch(std::invalid_argument& e) {
+		// Only ASCII chars should be converted to wchar, so we can ignore deprecation since C++17.
+		// "/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING" has been added to command line option in project properties.
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+		MessageBox(parent_hwnd, conv.from_bytes(e.what()).c_str(), _T("Invalid argument"), MB_OK | MB_ICONERROR);
+		return -4;
+	}
 
 	if (setup.GetUseUTF8()) {
 		CALL_WINAPI_WITH_DEBUGLOG(SetConsoleCP(CP_UTF8), TRUE, __FILE__, __LINE__);
@@ -103,39 +154,5 @@ int _tmain(int argc, LPCTSTR argv[])
 		SimpleCom::debug::log(ss2.str().c_str());
 	}
 
-	try {
-		while (true) {
-
-			SimpleCom::SerialConnection conn(device, &dcb, parent_hwnd, setup.GetUseTTYResizer(), setup.GetLogFile(), setup.IsEnableStdinLogging());
-			bool reattachable = conn.DoSession(setup.GetAutoReconnect());
-
-			if (setup.GetAutoReconnect() && reattachable) {
-				SimpleCom::debug::log(_T("Sleep before reconnecting..."));
-				Sleep(setup.GetAutoReconnectPauseInSec() * 1000);
-
-				SimpleCom::debug::log(_T("Reconnect start"));
-				SimpleCom::SerialDeviceScanner scanner;
-				scanner.SetTargetPort(setup.GetPort());
-				RegDisablePredefinedCacheEx();
-				scanner.WaitSerialDevices(parent_hwnd, setup.GetAutoReconnectTimeoutInSec());
-				if (scanner.GetDevices().empty()) {
-					throw SimpleCom::SerialDeviceScanException(_T("Waiting for serial device"), _T("Serial device is not available"));
-				}
-				SimpleCom::debug::log(_T("Reconnect device found"));
-			}
-			else {
-				break;
-			}
-		}
-	}
-	catch (SimpleCom::WinAPIException& e) {
-		MessageBox(parent_hwnd, e.GetErrorText().c_str(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		return -4;
-	}
-	catch (SimpleCom::SerialDeviceScanException& e) {
-		MessageBox(parent_hwnd, e.GetErrorText(), e.GetErrorCaption(), MB_OK | MB_ICONERROR);
-		return -5;
-	}
-
-	return 0;
+	return setup.IsBatchMode() ? DoBatchMode(device, &dcb) : DoInteractiveMode(device, &dcb, setup, parent_hwnd);
 }

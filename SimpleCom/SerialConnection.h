@@ -29,18 +29,18 @@ namespace SimpleCom {
 	private:
 		TString _device;
 		DCB _dcb;
-		HWND _parent_hwnd;
-		bool _useTTYResizer;
 		LogWriter* _logwriter;
 		bool _enableStdinLogging;
 
 		void InitSerialPort(const HANDLE hSerial);
 
 	public:
-		SerialConnection(TString& device, DCB* dcb, HWND hwnd, bool useTTYResizer, LPCTSTR logfilename, bool enableStdinLogging);
+		SerialConnection(TString& device, DCB* dcb, LPCTSTR logfilename, bool enableStdinLogging);
+		SerialConnection(TString& device, DCB* dcb) : SerialConnection(device, dcb, nullptr, false) {};
 		virtual ~SerialConnection() {};
 
-		bool DoSession(bool allowDetachDevice);
+		bool DoSession(bool allowDetachDevice, bool useTTYResizer, HWND parent_hwnd);
+		void DoBatch();
 	};
 
 }
