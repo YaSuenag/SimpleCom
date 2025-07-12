@@ -71,7 +71,7 @@ Please see [Applications installed from the web](https://docs.microsoft.com/ja-j
 # Notes
 
 * SimpleCom sends / receives VT100 escape sequences. So the serial device to connect via SimpleCom needs to support VT100 or compatible shell.
-* F1 key is hooked by SimpleCom (in interactive mode (default)), so escase sequence of F1 (`ESC O P`) would not be propagated.
+* F1 key is hooked by SimpleCom (in interactive mode (default)), so escape sequence of F1 (`ESC O P`) would not be propagated.
     * In batch mode, F1 would propergate to peripheral.
 * SimpleCom supports ANSI chars only, so it would not work if multibyte chars (e.g. CJK chars) are given.
 * Run [resize](https://linux.die.net/man/1/resize) provided by xterm if you want to align VT size of Linux box with your console window.

@@ -21,6 +21,20 @@
 
 static constexpr int buf_sz = 256;
 
+static void RedirectHandle(HANDLE hSource, HANDLE hDest) {
+	char buf[buf_sz];
+	DWORD nBytesRead;
+	while (ReadFile(hSource, buf, sizeof(buf), &nBytesRead, NULL)) {
+		DWORD nBytesWritten;
+		DWORD nBytesRemain = nBytesRead;
+		while (nBytesRemain > 0) {
+			if (WriteFile(hDest, &buf[nBytesRead - nBytesRemain], nBytesRemain, &nBytesWritten, nullptr)) {
+				nBytesRemain -= nBytesWritten;
+			}
+		}
+	}
+}
+
 DWORD WINAPI BatchStdInRedirector(_In_ LPVOID lpParameter) {
 	HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	if (hStdIn == INVALID_HANDLE_VALUE) {
@@ -35,18 +49,7 @@ DWORD WINAPI BatchStdInRedirector(_In_ LPVOID lpParameter) {
 	SetConsoleMode(hStdIn, mode);
 
 	HANDLE hSerial = reinterpret_cast<HANDLE>(lpParameter);
-	char buf[buf_sz];
-	DWORD nBytesRead;
-	while(ReadFile(hStdIn, buf, sizeof(buf), &nBytesRead, NULL)) {
-		DWORD nBytesWritten;
-		DWORD nBytesRemain = nBytesRead;
-		while (nBytesRemain > 0) {
-			if (WriteFile(hSerial, &buf[nBytesRead - nBytesRemain], nBytesRemain, &nBytesWritten, nullptr)) {
-				nBytesRemain -= nBytesWritten;
-			}
-		}
-	}
-
+	RedirectHandle(hStdIn, hSerial);
 	return 0;
 }
 
@@ -58,18 +61,7 @@ DWORD WINAPI BatchStdOutRedirector(_In_ LPVOID lpParameter) {
 	}
 
 	HANDLE hSerial = reinterpret_cast<HANDLE>(lpParameter);
-	char buf[buf_sz];
-	DWORD nBytesRead;
-	while (ReadFile(hSerial, buf, sizeof(buf), &nBytesRead, NULL)) {
-		DWORD nBytesWritten;
-		DWORD nBytesRemain = nBytesRead;
-		while (nBytesRemain > 0) {
-			if (WriteFile(hStdOut, &buf[nBytesRead - nBytesRemain], nBytesRemain, &nBytesWritten, nullptr)) {
-				nBytesRemain -= nBytesWritten;
-			}
-		}
-	}
-
+	RedirectHandle(hSerial, hStdOut);
 	return 0;
 }
 

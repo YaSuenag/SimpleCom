@@ -31,7 +31,7 @@ namespace SimpleCom {
 
     public:
         BatchRedirector(HANDLE hSerial) : TerminalRedirectorBase(hSerial) {};
-		virtual ~BatchRedirector() {};
+        virtual ~BatchRedirector() {};
     };
 
 }

@@ -140,7 +140,6 @@ int _tmain(int argc, LPCTSTR argv[])
 	}
 	catch(std::invalid_argument& e) {
 		// Only ASCII chars should be converted to wchar, so we can ignore deprecation since C++17.
-		// "/D _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING" has been added to command line option in project properties.
 		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 		MessageBox(parent_hwnd, conv.from_bytes(e.what()).c_str(), _T("Invalid argument"), MB_OK | MB_ICONERROR);
 		return -4;
