@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2024, Yasumasa Suenaga
+ * Copyright (C) 2019, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -150,6 +150,7 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_options[_T("--auto-reconnect-timeout")] = new CommandlineOption<int>(_T("[num]"), _T("Reconnect timeout"), 120);
 	_options[_T("--log-file")] = new CommandlineOption<LPTSTR>(_T("[logfile]"), _T("Log serial communication to file"), nullptr);
 	_options[_T("--stdin-logging")] = new CommandlineOption<bool>(_T(""), _T("Enable stdin logging"), false);
+	_options[_T("--batch")] = new CommandlineOption<bool>(_T(""), _T("Perform in batch mode"), false);
 	_options[_T("--help")] = new CommandlineHelpOption(&_options);
 }
 
@@ -526,8 +527,34 @@ void SimpleCom::SerialSetup::ParseArguments(int argc, LPCTSTR argv[]) {
 		}
 	}
 
+	Validate();
+}
+
+void SimpleCom::SerialSetup::Validate() {
 	if (!IsShowDialog() && _port.empty()) {
-		throw SerialSetupException(_T("command line argument"), _T("Serial port is not specified"));
+		throw std::invalid_argument("Serial port is not specified");
+	}
+
+	if(IsEnableStdinLogging() && GetLogFile() == nullptr) {
+		throw std::invalid_argument("Log file should be configured when stdin logging is enabled");
+	}
+
+	if (IsBatchMode()) {
+		if (_port.empty()) {
+			throw std::invalid_argument("Serial port have to be set with batch mode");
+		}
+		if(IsShowDialog()) {
+			throw std::invalid_argument("Configuration dialog cannot be configured with batch mode");
+		}
+		if (GetUseTTYResizer()) {
+			throw std::invalid_argument("TTY resizer cannot be configured with batch mode");
+		}
+		if (GetAutoReconnect()) {
+			throw std::invalid_argument("Auto reconnect cannot be configured with batch mode");
+		}
+		if(GetLogFile() != nullptr) {
+			throw std::invalid_argument("Logging cannot be configured with batch mode");
+		}
 	}
 }
 

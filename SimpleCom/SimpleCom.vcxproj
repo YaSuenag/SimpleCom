@@ -175,6 +175,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BatchRedirector.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="EnumValue.cpp" />
     <ClCompile Include="LogWriter.cpp" />
@@ -186,12 +187,15 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TerminalRedirector.cpp" />
+    <ClCompile Include="TerminalRedirectorBase.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="WinAPIException.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\common.h" />
     <ClInclude Include="..\common\generated\version.h" />
+    <ClInclude Include="BatchRedirector.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="EnumValue.h" />
     <ClInclude Include="LogWriter.h" />
@@ -201,6 +205,8 @@
     <ClInclude Include="SerialPortWriter.h" />
     <ClInclude Include="SerialSetup.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TerminalRedirector.h" />
+    <ClInclude Include="TerminalRedirectorBase.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="WinAPIException.h" />
   </ItemGroup>

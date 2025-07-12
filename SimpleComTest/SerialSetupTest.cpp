@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -229,6 +229,7 @@ namespace SimpleComTest
 			Assert::AreEqual(120, setup.GetAutoReconnectTimeoutInSec());
 			Assert::IsNull(setup.GetLogFile());
 			Assert::AreEqual(false, setup.IsEnableStdinLogging());
+			Assert::AreEqual(false, setup.IsBatchMode());
 		}
 
 		TEST_METHOD(ArgParserTest)
@@ -340,6 +341,128 @@ namespace SimpleComTest
 			Assert::AreEqual(static_cast<WORD>(2048), dcb.XoffLim);
 			Assert::AreEqual('\x11', dcb.XonChar);
 			Assert::AreEqual('\x13', dcb.XoffChar);
+		}
+
+		TEST_METHOD(DialogWithoutPortValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--show-dialog"),
+				_T("--batch"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(StdInLoggingWithoutLoggingValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--stdin-logging"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchWithoutPortValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchWithDialogValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch"),
+				_T("--show-dialog"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchWithTTYResizerValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch"),
+				_T("--tty-resizer"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchWithAutoReconnectValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch"),
+				_T("--auto-reconnect"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchWithLoggingValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch"),
+				_T("--log-file"), _T("silver-bullet.log"),
+				_T("COM100")
+			};
+
+			auto test = [&] { setup.ParseArguments(sizeof(args) / sizeof(char*), args); };
+			Assert::ExpectException<std::invalid_argument>(test);
+		}
+
+		TEST_METHOD(BatchValidatorTest)
+		{
+			SimpleCom::SerialSetup setup;
+
+			LPCTSTR args[] = {
+				_T("SimpleCom.exe"), // argv[0] is an executable in main()
+				_T("--batch"),
+				_T("--baud-rate"), _T("9600"),
+				_T("--byte-size"), _T("1"),
+				_T("--parity"), _T("odd"),
+				_T("--stop-bits"), _T("2"),
+				_T("--flow-control"), _T("hardware"),
+				_T("--utf8"),
+				_T("--wait-serial-device"), _T("10"),
+				_T("COM100")
+			};
+			setup.ParseArguments(sizeof(args) / sizeof(char*), args);
+			Assert::AreEqual(true, setup.IsBatchMode());
 		}
 
 	};

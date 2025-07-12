@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2025, Yasumasa Suenaga
+ * Copyright (C) 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,27 +20,30 @@
 
 #include "stdafx.h"
 #include "LogWriter.h"
+#include "WinAPIException.h"
 
 
-namespace SimpleCom {
-
-	class SerialConnection
+namespace SimpleCom
+{
+	class TerminalRedirectorBase
 	{
-	private:
-		TString _device;
-		DCB _dcb;
-		LogWriter* _logwriter;
-		bool _enableStdinLogging;
+	protected:
+		HANDLE _hSerial;
+		HANDLE _hThreadStdIn;
+		HANDLE _hThreadStdOut;
 
-		void InitSerialPort(const HANDLE hSerial);
+		virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdInRedirector() = 0;
+		virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdOutRedirector() = 0;
 
 	public:
-		SerialConnection(TString& device, DCB* dcb, LPCTSTR logfilename, bool enableStdinLogging);
-		SerialConnection(TString& device, DCB* dcb) : SerialConnection(device, dcb, nullptr, false) {};
-		virtual ~SerialConnection() {};
+		TerminalRedirectorBase(HANDLE hSerial) : _hSerial(hSerial), _hThreadStdIn(INVALID_HANDLE_VALUE), _hThreadStdOut(INVALID_HANDLE_VALUE) {};
+		virtual ~TerminalRedirectorBase() {};
 
-		bool DoSession(bool allowDetachDevice, bool useTTYResizer, HWND parent_hwnd);
-		void DoBatch();
+		virtual void StartRedirector();
+
+		// Returns true if the peripheral is reattachable.
+		virtual void AwaitTermination();
+
+		virtual bool Reattachable();
 	};
-
 }

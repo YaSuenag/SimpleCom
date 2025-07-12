@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2025, Yasumasa Suenaga
+ * Copyright (C) 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,30 +17,22 @@
  * 02110-1301, USA.
  */
 #pragma once
-
 #include "stdafx.h"
-#include "LogWriter.h"
-
+#include "TerminalRedirectorBase.h"
 
 namespace SimpleCom {
 
-	class SerialConnection
-	{
-	private:
-		TString _device;
-		DCB _dcb;
-		LogWriter* _logwriter;
-		bool _enableStdinLogging;
+    class BatchRedirector :
+        public TerminalRedirectorBase
+    {
+    protected:
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdInRedirector() override;
+        virtual std::tuple<LPTHREAD_START_ROUTINE, LPVOID> GetStdOutRedirector() override;
 
-		void InitSerialPort(const HANDLE hSerial);
-
-	public:
-		SerialConnection(TString& device, DCB* dcb, LPCTSTR logfilename, bool enableStdinLogging);
-		SerialConnection(TString& device, DCB* dcb) : SerialConnection(device, dcb, nullptr, false) {};
-		virtual ~SerialConnection() {};
-
-		bool DoSession(bool allowDetachDevice, bool useTTYResizer, HWND parent_hwnd);
-		void DoBatch();
-	};
+    public:
+        BatchRedirector(HANDLE hSerial) : TerminalRedirectorBase(hSerial) {};
+        virtual ~BatchRedirector() {};
+    };
 
 }
+

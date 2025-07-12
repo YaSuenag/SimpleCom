@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@
  */
 #pragma once
 
-#include <Windows.h>
+#include "stdafx.h"
 #include "WinAPIException.h"
 
 /*
