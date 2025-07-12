@@ -21,6 +21,9 @@ Console app for serial connection.
 5. Press F1 to leave its serial session and to finish SimpleCom
     * Press CTRL+C in batch mode
 
+> [!IMPORTANT]
+> You have to use batch mode (`--batch`) if you want to redirect something into SimpleCom. Batch mode would not terminate automatically when stdin reaches EOF. So you have to type CTRL+C if you want terminate SimpleCom.
+
 ## Command line options
 
 | Option | Default | Description |
