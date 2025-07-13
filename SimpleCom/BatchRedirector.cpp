@@ -19,8 +19,6 @@
 #include "stdafx.h"
 #include "BatchRedirector.h"
 
-static constexpr int buf_sz = 256;
-
 static void RedirectHandle(HANDLE hSource, HANDLE hDest) {
 	char buf[buf_sz];
 	DWORD nBytesRead;

@@ -24,9 +24,6 @@
 #include "debug.h"
 #include "../common/common.h"
 
-static constexpr int buf_sz = 256;
-
-
 
 SimpleCom::SerialConnection::SerialConnection(TString& device, DCB* dcb, LPCTSTR logfilename, bool enableStdinLogging) :
 	_device(device),

@@ -24,8 +24,6 @@
 #include "WinAPIException.h"
 #include "../common/common.h"
 
-static constexpr int buf_sz = 256;
-
 static constexpr LPCTSTR CLEAR_CONSOLE_COMMAND = _T("\x1b[2J");
 static DWORD CLEAR_CONSOLE_COMMAND_LEN = static_cast<DWORD>(_tcslen(CLEAR_CONSOLE_COMMAND));
 

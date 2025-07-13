@@ -20,6 +20,7 @@
 
 #include "stdafx.h"
 
+static constexpr int buf_sz = 256;
 
 namespace SimpleCom
 {
