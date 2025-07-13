@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace SimpleComTest
 {
-	TEST_CLASS(UtilmTest)
+	TEST_CLASS(UtilTest)
 	{
 	public:
 

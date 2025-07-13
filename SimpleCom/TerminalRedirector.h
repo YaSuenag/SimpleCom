@@ -21,6 +21,9 @@
 #include "stdafx.h"
 #include "TerminalRedirectorBase.h"
 #include "util.h"
+#include "LogWriter.h"
+#include "WinAPIException.h"
+
 
 namespace SimpleCom
 {

@@ -19,8 +19,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include "LogWriter.h"
-#include "WinAPIException.h"
 
 
 namespace SimpleCom
@@ -41,9 +39,9 @@ namespace SimpleCom
 
 		virtual void StartRedirector();
 
-		// Returns true if the peripheral is reattachable.
 		virtual void AwaitTermination();
 
+		// Returns true if the peripheral is reattachable.
 		virtual bool Reattachable();
 	};
 }

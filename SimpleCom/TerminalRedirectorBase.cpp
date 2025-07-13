@@ -19,6 +19,7 @@
 
 #include "stdafx.h"
 #include "TerminalRedirectorBase.h"
+#include "WinAPIException.h"
 
 
 void SimpleCom::TerminalRedirectorBase::StartRedirector()
