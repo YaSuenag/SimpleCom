@@ -89,6 +89,9 @@ jobs:
       with:
         languages: cpp
         queries: security-extended,security-and-quality
+        config: |
+          paths-ignore:
+            - tty-resizer/vmlinux.h
 
     - name: Build TTY Resizer
       working-directory: tty-resizer
