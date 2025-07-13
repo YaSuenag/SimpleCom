@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -149,9 +149,9 @@ int main(int argc, char *argv[]){
   if(rb != NULL){
     ring_buffer__free(rb);
   }
-  if(ringbuf_received != NULL){
-    free(ringbuf_received);
-  }
+
+  free(ringbuf_received);
+
   if(skel != NULL){
     tty_resizer_bpf__destroy(skel);
   }
