@@ -15,6 +15,7 @@
 #include <Windows.h>
 #include <CommCtrl.h>
 #include <commdlg.h>
+#include <Shlwapi.h>
 
 #include <tchar.h>
 

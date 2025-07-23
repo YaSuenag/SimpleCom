@@ -117,11 +117,10 @@ void SimpleCom::CommandlineHelpOption::set_from_arg(LPCTSTR arg) {
 
 	COUT << prodinfo.GetProductName() << _T(" ") << prodinfo.GetProductVersion() << std::endl;
 	COUT << prodinfo.GetLegalCopyright() << std::endl;
-	COUT << R"(
-Usage:
-  SimpleCom.exe <options> <COM port>
-
-Options:)" << std::endl;
+	COUT << _T("Usage:") << std::endl;
+	COUT << _T("  ") << PathFindFileName(prodinfo.GetExePath()) << _T(" <options> <COM port>") << std::endl;
+	COUT << std::endl;
+	COUT << _T("Options:") << std::endl;
 
 	for (auto itr = _options->begin(); itr != _options->end(); itr++) {
 		auto opt = itr->second;

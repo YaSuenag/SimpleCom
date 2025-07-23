@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Yasumasa Suenaga
+ * Copyright (C) 2024, 2025, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,10 +22,9 @@
 
 
 ProductInfo::ProductInfo() {
-	TCHAR exeName[MAX_PATH];
-	GetModuleFileName(NULL, exeName, MAX_PATH);
+	GetModuleFileName(NULL, exe_path, MAX_PATH);
 	if (GetLastError() == ERROR_SUCCESS) {
-		LoadVersionInfo(exeName);
+		LoadVersionInfo(exe_path);
 	}
 	else {
 		data = nullptr;

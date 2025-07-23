@@ -80,6 +80,7 @@ class ProductInfo {
 private:
 	unsigned char* data;
 	DWORD data_len;
+	TCHAR exe_path[MAX_PATH];
 
 	void LoadVersionInfo(LPCTSTR exe_name);
 	LPCTSTR GetString(LPCTSTR query);
@@ -91,4 +92,9 @@ public:
 	LPCTSTR GetProductName();
 	LPCTSTR GetProductVersion();
 	LPCTSTR GetLegalCopyright();
+
+    inline LPCTSTR GetExePath() const noexcept {
+      return exe_path;
+    }
+
 };
