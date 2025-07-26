@@ -4,8 +4,8 @@
 
 #define MAJOR 1
 #define MINOR 2
-#define PATCH 5
+#define PATCH 6
 #define BUILD 0
 
-#define SEMVER "1.2.5"
-#define LEGAL_COPYRIGHT "Copyright (C) 2019, 2024, Yasumasa Suenaga"
+#define SEMVER "1.2.6"
+#define LEGAL_COPYRIGHT "Copyright (C) 2019, 2025, Yasumasa Suenaga"
