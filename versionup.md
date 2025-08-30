@@ -13,6 +13,8 @@ How to increase version number
     * Output filename
     * I cannot ensure the result of this script because the spec of .vdproj file is closed.
 
+[testedversion.ps1](testedversion.ps1) helps to bump the OS version in [maxversiontested](https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests#maxversiontested) in `app.manifest`.
+
 # Usage
 
 ```
@@ -23,3 +25,5 @@ versionup.ps1 [version number]
 * Version number is converted into [SemVer](https://semver.org/)
     * x.y.z is given, it is used straightly as SemVer, and adds `0` as a revision number in Windows
     * w.x.y.z is given, it is converted into w.x.t+z
+
+`testedversion.ps1` can be called without any arguments.
