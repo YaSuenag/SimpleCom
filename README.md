@@ -43,6 +43,7 @@ Console app for serial connection.
 | `--log-file [logfile]` | &lt;none&gt; | Log serial communication to file |
 | `--stdin-logging` | false | Enable stdin logging<br><br>⚠️Possible to be logged each chars duplicately due to echo back from the console when this option is set, and also secrets (e.g. passphrase) typed into the console will be logged even if it is not shown on the console. |
 | `--batch` | false | Perform in batch mode<br><br>⚠️You have to set serial port in command line arguments, and you cannot set with `--show-dialog`, `--tty-resizer`, `--auto-reconnect`, `--log-file`. |
+| `--disable-efficiency-mode` | false | Disable [Efficiency Mode](https://devblogs.microsoft.com/performance-diagnostics/reduce-process-interference-with-task-manager-efficiency-mode/). Specify this option if you have performance issue in SimpleCom. This option cannot be set on setup dialog. |
 | `--help` | - | Show help message |
 
 # How to build

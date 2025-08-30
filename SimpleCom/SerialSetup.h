@@ -211,6 +211,14 @@ namespace SimpleCom {
 			return static_cast<CommandlineOption<bool>*>(_options[_T("--batch")])->get();
 		}
 
+		inline void DisableEfficiencyMode(bool disable) {
+			static_cast<CommandlineOption<bool>*>(_options[_T("--disable-efficiency-mode")])->set(disable);
+		}
+
+		inline bool IsEfficiencyMode() {
+			return !static_cast<CommandlineOption<bool>*>(_options[_T("--disable-efficiency-mode")])->get();
+		}
+
 		inline SerialDeviceScanner& GetDeviceScanner() {
 			return _scanner;
 		}

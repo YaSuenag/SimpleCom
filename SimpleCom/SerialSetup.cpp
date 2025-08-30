@@ -150,6 +150,7 @@ SimpleCom::SerialSetup::SerialSetup() :
 	_options[_T("--log-file")] = new CommandlineOption<LPTSTR>(_T("[logfile]"), _T("Log serial communication to file"), nullptr);
 	_options[_T("--stdin-logging")] = new CommandlineOption<bool>(_T(""), _T("Enable stdin logging"), false);
 	_options[_T("--batch")] = new CommandlineOption<bool>(_T(""), _T("Perform in batch mode"), false);
+	_options[_T("--disable-efficiency-mode")] = new CommandlineOption<bool>(_T(""), _T("Disable efficiency mode"), false);
 	_options[_T("--help")] = new CommandlineHelpOption(&_options);
 }
 

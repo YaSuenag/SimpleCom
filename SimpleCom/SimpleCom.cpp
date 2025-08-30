@@ -90,6 +90,22 @@ static int DoBatchMode(TString& device, DCB* dcb) {
 	return 0;
 }
 
+// https://devblogs.microsoft.com/performance-diagnostics/reduce-process-interference-with-task-manager-efficiency-mode/
+static void SetEfficiencyMode() {
+	HANDLE hProc = GetCurrentProcess();
+
+	// a) reduces process base priority to low
+	SetPriorityClass(hProc, IDLE_PRIORITY_CLASS);
+
+	// b) sets QoS mode to EcoQoS.
+	PROCESS_POWER_THROTTLING_STATE PowerThrottling = {
+		.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+		.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+		.StateMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+	};
+	CALL_WINAPI_WITH_DEBUGLOG(SetProcessInformation(hProc, ProcessPowerThrottling, &PowerThrottling, sizeof(PowerThrottling)), TRUE, __FILE__, __LINE__);
+}
+
 int _tmain(int argc, LPCTSTR argv[])
 {
 	DCB dcb;
@@ -97,8 +113,8 @@ int _tmain(int argc, LPCTSTR argv[])
 	HWND parent_hwnd = GetParentWindow();
 	SimpleCom::SerialSetup setup;
 
-	// Serial port configuration
 	try {
+		// Serial port configuration
 		if (argc > 1) {
 			// command line mode
 			setup.ParseArguments(argc, argv);
@@ -106,6 +122,10 @@ int _tmain(int argc, LPCTSTR argv[])
 		else {
 			// GUI mode
 			setup.SetShowDialog(true);
+		}
+
+		if (setup.IsEfficiencyMode()) {
+			SetEfficiencyMode();
 		}
 
 		if (setup.GetWaitDevicePeriod() > 0) {

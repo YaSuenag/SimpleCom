@@ -230,6 +230,7 @@ namespace SimpleComTest
 			Assert::IsNull(setup.GetLogFile());
 			Assert::AreEqual(false, setup.IsEnableStdinLogging());
 			Assert::AreEqual(false, setup.IsBatchMode());
+			Assert::AreEqual(true, setup.IsEfficiencyMode());
 		}
 
 		TEST_METHOD(ArgParserTest)
@@ -250,6 +251,7 @@ namespace SimpleComTest
 				_T("--auto-reconnect-timeout"), _T("20"),
 				_T("--log-file"), _T(R"(A:\test.log)"),
 				_T("--stdin-logging"),
+				_T("--disable-efficiency-mode"),
 				_T("COM100")
 			};
 
@@ -269,6 +271,7 @@ namespace SimpleComTest
 			Assert::AreEqual(20, setup.GetAutoReconnectTimeoutInSec());
 			Assert::AreEqual(_T(R"(A:\test.log)"), setup.GetLogFile());
 			Assert::AreEqual(true, setup.IsEnableStdinLogging());
+			Assert::AreEqual(false, setup.IsEfficiencyMode());
 			Assert::AreEqual(_T("COM100"), setup.GetPort().c_str());
 		}
 
