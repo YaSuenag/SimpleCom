@@ -46,7 +46,7 @@ int on_char_received(void *ctx, void *data, size_t size){
   struct winsize ws;
 
   ch = *(char *)data;
-  if(ch == 't'){
+  if(ch == RESIZER_END_MARKER){
     ringbuf_received[ringbuf_received_idx] = '\0';
     if(sscanf(ringbuf_received, "%hu" RESIZER_SEPARATOR "%hu", &ws.ws_row, &ws.ws_col) == 2){
       int tty_fd = open(ttypath, O_RDONLY | O_NOCTTY);
@@ -62,7 +62,7 @@ int on_char_received(void *ctx, void *data, size_t size){
     }
     ringbuf_received_idx = 0;
   }
-  else if(ch == 'c'){
+  else if(ch == RESIZER_CANCEL_MARKER){
     ringbuf_received_idx = 0;
   }
   else{
