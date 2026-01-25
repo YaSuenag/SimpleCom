@@ -5,7 +5,7 @@ SimpleCom
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8152/badge)](https://www.bestpractices.dev/projects/8152)
 ===================
 
-![SimpleCom Logo](SumpleCom.png) Console app for serial connection.
+![SimpleCom Logo](SimpleCom.png) Console app for serial connection.
 
 # How to use
 
