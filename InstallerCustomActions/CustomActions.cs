@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2021, Yasumasa Suenaga
+ * Copyright (C) 2021, 2026, Yasumasa Suenaga
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,7 +33,8 @@ namespace SimpleComInstaller
                 ""profiles"": [
                     {
                         ""name"": ""SimpleCom"",
-                        ""commandline"": ""{PATH}""
+                        ""commandline"": ""{PATH}"",
+                        ""icon"": ""{PATH}""
                     }
                 ]
             }

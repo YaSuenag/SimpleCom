@@ -2,7 +2,8 @@
   "profiles": [
     {
       "name": "SimpleCom",
-      "commandline": "C:\\path\\to\\SimpleCom.exe --show-dialog --wait-serial-device 60"
+      "commandline": "C:\\path\\to\\SimpleCom.exe --show-dialog --wait-serial-device 60",
+      "icon": "C:\\path\\to\\SimpleCom.exe"
     }
   ]
 }
